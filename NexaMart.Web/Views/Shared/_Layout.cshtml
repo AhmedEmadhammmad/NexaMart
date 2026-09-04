@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - NexaMart | Multi-Vendor E-Commerce Marketplace</title>
+    <meta name="description" content="NexaMart - Where Vendors Meet Customers. Explore thousands of high quality products from verified vendors." />
+    
+    <!-- Google Fonts: Outfit & Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- NexaMart Custom Design System -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <!-- Top Announcement Bar -->
+    <div class="nexa-topbar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fa-solid fa-bolt me-1 text-warning"></i>
+                <span>Special Launch Offer: <strong>Free Express Delivery</strong> on your first order with code <strong>NEXA2026</strong></span>
+            </div>
+            <div class="d-none d-md-flex align-items-center gap-3">
+                <span><i class="fa-solid fa-headset me-1"></i> 24/7 Support: +20 100 000 0000</span>
+                <span>|</span>
+                <span class="badge bg-dark border border-secondary text-light">EGP / Arabic & English</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Sticky Navbar -->
+    <header class="nexa-header">
+        <div class="container">
+            <nav class="nexa-navbar d-flex align-items-center justify-content-between gap-3">
+                <!-- Brand Logo -->
+                <a class="navbar-brand d-flex align-items-center gap-2 m-0" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/logo.jpg" alt="NexaMart Logo" class="brand-logo-img" />
+                    <span class="d-none d-lg-inline-block fw-bold text-white fs-4" style="font-family: var(--font-heading);">
+                        Nexa<span style="color: var(--color-primary-light);">Mart</span>
+                    </span>
+                </a>
+
+                <!-- Global Search Form -->
+                <form class="nexa-search-form d-none d-md-flex flex-grow-1 mx-2" onsubmit="event.preventDefault();">
+                    <select class="category-select-pill d-none d-lg-block">
+                        <option value="">All Categories</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="fashion">Fashion & Apparel</option>
+                        <option value="home">Home & Living</option>
+                        <option value="beauty">Beauty & Care</option>
+                        <option value="sports">Sports & Outdoor</option>
+                    </select>
+                    <input type="text" class="search-input-pill" placeholder="Search products, brands, verified vendors..." />
+                    <button type="submit" class="search-submit-btn" title="Search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </form>
+
+                <!-- Actions: Become a Vendor, Wishlist, Cart, Account -->
+                <div class="d-flex align-items-center gap-2">
+                    <a href="#become-vendor" class="btn-vendor-cta d-none d-xl-inline-flex">
+                        <i class="fa-solid fa-store"></i>
+                        <span>Become a Vendor</span>
+                    </a>
+
+                    <a href="#wishlist" class="nav-action-btn" title="Wishlist">
+                        <i class="fa-regular fa-heart fs-5"></i>
+                        <span class="badge-counter">0</span>
+                    </a>
+
+                    <a href="#cart" class="nav-action-btn" title="Cart">
+                        <i class="fa-solid fa-cart-shopping fs-5"></i>
+                        <span class="badge-counter">0</span>
+                    </a>
+
+                    <a href="#login" class="btn-nexa-outline py-2 px-3 fs-6 d-none d-sm-inline-flex">
+                        <i class="fa-regular fa-user me-1"></i>
+                        <span>Sign In</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Sub-Navigation Bar -->
+        <div class="nexa-subnav">
+            <div class="container d-flex align-items-center justify-content-between overflow-auto">
+                <div class="d-flex align-items-center gap-1">
+                    <a class="subnav-link active" asp-controller="Home" asp-action="Index">
+                        <i class="fa-solid fa-house"></i> Home
+                    </a>
+                    <a class="subnav-link" href="#categories">
+                        <i class="fa-solid fa-layer-group"></i> Categories
+                    </a>
+                    <a class="subnav-link" href="#deals">
+                        <i class="fa-solid fa-fire text-danger"></i> Flash Deals
+                    </a>
+                    <a class="subnav-link" href="#products">
+                        <i class="fa-solid fa-box-open"></i> Products
+                    </a>
+                    <a class="subnav-link" href="#vendors">
+                        <i class="fa-solid fa-shop"></i> Verified Vendors
+                    </a>
+                </div>
+                <div class="d-none d-lg-flex align-items-center gap-3 text-secondary small">
+                    <span><i class="fa-solid fa-shield-halved text-success me-1"></i> 100% Secure Checkout</span>
+                    <span><i class="fa-solid fa-rotate-left text-info me-1"></i> 14-Day Free Returns</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <!-- NexaMart Footer -->
+    <footer class="nexa-footer">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Brand Info -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="~/images/logo.jpg" alt="NexaMart" class="footer-logo" />
+                        <h4 class="m-0 fw-bold">Nexa<span style="color: var(--color-primary-light);">Mart</span></h4>
+                    </div>
+                    <p class="footer-desc">
+                        NexaMart is a multi-vendor marketplace connecting passionate vendors with valued customers worldwide.
+                        Discover quality products, enjoy secure checkout, and experience seamless multi-vendor order tracking.
+                    </p>
+                    <div class="social-links-bar">
+                        <a href="#" class="social-link-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="social-link-btn" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="#" class="social-link-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="social-link-btn" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+
+                <!-- Marketplace Links -->
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-heading">Marketplace</h5>
+                    <ul class="footer-links">
+                        <li><a href="#products">All Products</a></li>
+                        <li><a href="#categories">Categories</a></li>
+                        <li><a href="#deals">Flash Deals</a></li>
+                        <li><a href="#vendors">Top Stores</a></li>
+                        <li><a href="#">New Arrivals</a></li>
+                    </ul>
+                </div>
+
+                <!-- Vendor Center -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-heading">Vendor Hub</h5>
+                    <ul class="footer-links">
+                        <li><a href="#become-vendor">Sell on NexaMart</a></li>
+                        <li><a href="#">Vendor Dashboard</a></li>
+                        <li><a href="#">Commission Policy</a></li>
+                        <li><a href="#">Seller Success Stories</a></li>
+                        <li><a href="#">Vendor Terms of Service</a></li>
+                    </ul>
+                </div>
+
+                <!-- Customer Care & Security -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-heading">Customer Care</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Track Your Order</a></li>
+                        <li><a href="#">Shipping Policy</a></li>
+                        <li><a href="#">Returns & Refunds</a></li>
+                        <li><a href="#">Help Center & FAQ</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="small text-secondary d-block mb-2">Guaranteed Safe & Secure Checkout:</span>
+                        <div class="d-flex gap-2 text-secondary fs-4">
+                            <i class="fa-brands fa-stripe text-info" title="Stripe Secure"></i>
+                            <i class="fa-brands fa-cc-visa text-light" title="Visa"></i>
+                            <i class="fa-brands fa-cc-mastercard text-danger" title="Mastercard"></i>
+                            <i class="fa-solid fa-money-bill-wave text-success" title="Cash on Delivery"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div>
+                    &copy; 2026 <strong>NexaMart Inc.</strong> All Rights Reserved. Built with ASP.NET Core 8 & Onion Architecture.
+                </div>
+                <div class="d-flex gap-3 small">
+                    <a href="#" class="text-secondary">Terms & Conditions</a>
+                    <a href="#" class="text-secondary">Privacy Notice</a>
+                    <a href="#" class="text-secondary">Security</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
