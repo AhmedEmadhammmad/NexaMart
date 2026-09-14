@@ -1,0 +1,230 @@
+@model NexaMart.Web.Models.AdminProductListViewModel
+@{
+    ViewData["Title"] = "Products Catalog Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="mb-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-box-seam-fill text-primary"></i> Product Catalog Management
+            </h2>
+            <p class="text-muted mb-0 small">
+                Manage inventory, stock quantities, pricing, and active status in a clean tabular view.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="CreateProduct" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-plus-circle"></i> Create New Product
+            </a>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Dashboard Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar (Including ID Search) -->
+    <div class="admin-card p-3 mb-4 bg-white shadow-sm">
+        <form method="get" asp-action="Products" class="row g-2 align-items-end">
+            <!-- Search by ID -->
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-semibold text-muted mb-1">Search by ID</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-hash"></i></span>
+                    <input type="number" name="SearchId" value="@Model.Filter.SearchId" class="form-control form-control-sm" placeholder="ID #" min="1" />
+                </div>
+            </div>
+
+            <!-- Search by Name / Keyword -->
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Product Name / Keyword</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="SearchTerm" value="@Model.Filter.SearchTerm" class="form-control form-control-sm" placeholder="Filter by product name..." />
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="col-6 col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Filter by Category</label>
+                <select name="CategoryId" class="form-select form-select-sm">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.Id" selected="@(Model.Filter.CategoryId == cat.Id)">@cat.Name</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-dark flex-grow-1">
+                    <i class="bi bi-funnel"></i> Apply Filter
+                </button>
+                <a asp-action="Products" class="btn btn-sm btn-outline-secondary">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Products Data Table -->
+    <div class="admin-table-container mb-4">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark">
+                Showing @Model.Products.Items.Count of @Model.Products.TotalCount Products
+            </span>
+            <span class="badge bg-secondary">
+                Page @Model.Products.PageIndex of @Model.Products.TotalPages
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table admin-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th style="width: 70px;">Image</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Unit Price</th>
+                        <th>Stock Qty</th>
+                        <th>Avg Rating</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th class="text-end" style="width: 170px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Products.Items.Any())
+                    {
+                        @foreach (var product in Model.Products.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary font-monospace">#@product.Id</span>
+                                </td>
+                                <td>
+                                    <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://placehold.co/80x80?text=No+Img" : product.ImageUrl)" 
+                                         alt="@product.Name" 
+                                         class="rounded-2 border" 
+                                         style="width: 46px; height: 46px; object-fit: cover;" />
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@product.Name</div>
+                                    <small class="text-muted">Item ID: #@product.Id</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@product.CategoryName</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary">@product.Price.ToString("C")</span>
+                                </td>
+                                <td>
+                                    @if (product.StockQuantity <= 0)
+                                    {
+                                        <span class="badge bg-danger">Out of Stock (0)</span>
+                                    }
+                                    else if (product.StockQuantity < 10)
+                                    {
+                                        <span class="badge bg-warning text-dark">Low Stock (@product.StockQuantity)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success fw-semibold">@product.StockQuantity</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem;"></i>
+                                        <span class="fw-bold">@product.AverageRating.ToString("F1")</span>
+                                        <small class="text-muted">(@product.ReviewCount)</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (product.IsActive)
+                                    {
+                                        <span class="badge badge-status-active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-status-blocked">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">@product.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="EditProduct" asp-route-id="@product.Id" class="btn btn-outline-secondary" title="Edit Product">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <form asp-action="ToggleProductStatus" asp-route-id="@product.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn @(product.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(product.IsActive ? "Deactivate" : "Activate")">
+                                                <i class="bi @(product.IsActive ? "bi-eye-slash" : "bi-eye")"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-action="DeleteProduct" asp-route-id="@product.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete product #@product.Id?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete Product">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-2 d-block mb-2"></i>
+                                No products match your filter criteria.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        @if (Model.Products.TotalPages > 1)
+        {
+            <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                <span class="small text-muted">
+                    Page @Model.Products.PageIndex of @Model.Products.TotalPages
+                </span>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(!Model.Products.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Products" 
+                           asp-route-PageIndex="@(Model.Products.PageIndex - 1)" 
+                           asp-route-SearchId="@Model.Filter.SearchId"
+                           asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                           asp-route-CategoryId="@Model.Filter.CategoryId">&laquo; Prev</a>
+                    </li>
+                    @for (int p = Math.Max(1, Model.Products.PageIndex - 2); p <= Math.Min(Model.Products.TotalPages, Model.Products.PageIndex + 2); p++)
+                    {
+                        <li class="page-item @(p == Model.Products.PageIndex ? "active" : "")">
+                            <a class="page-link" asp-action="Products" 
+                               asp-route-PageIndex="@p" 
+                               asp-route-SearchId="@Model.Filter.SearchId"
+                               asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                               asp-route-CategoryId="@Model.Filter.CategoryId">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.Products.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Products" 
+                           asp-route-PageIndex="@(Model.Products.PageIndex + 1)" 
+                           asp-route-SearchId="@Model.Filter.SearchId"
+                           asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                           asp-route-CategoryId="@Model.Filter.CategoryId">Next &raquo;</a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>

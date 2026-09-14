@@ -1,0 +1,266 @@
+@model NexaMart.Web.Models.ProductDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+    bool isStaff = ViewBag.IsStaff ?? false;
+}
+
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index" class="text-decoration-none">Products</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index" asp-route-CategoryId="@Model.CategoryId" class="text-decoration-none">@Model.CategoryName</a></li>
+            <li class="breadcrumb-item active text-truncate" style="max-width: 250px;">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <!-- Product Showcase & Purchase Section -->
+    <div class="glass-card p-4 p-lg-5 mb-5">
+        <div class="row g-5 align-items-center">
+            <!-- Product Media -->
+            <div class="col-lg-6">
+                <div class="position-relative rounded-4 overflow-hidden border shadow-sm" style="background: #f8fafc; max-height: 480px;">
+                    <img src="@(Model.ImageUrl ?? "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80")" 
+                         alt="@Model.Name" 
+                         class="img-fluid w-100 h-100 object-fit-cover" 
+                         style="max-height: 480px; object-fit: cover;">
+                    <span class="badge-stock @(Model.InStock ? "badge-in-stock" : "badge-out-stock")" style="top: 20px; right: 20px; font-size: 0.9rem;">
+                        @(Model.InStock ? $"{Model.StockQuantity} Available" : "Sold Out")
+                    </span>
+                </div>
+            </div>
+
+            <!-- Product Info & Purchasing -->
+            <div class="col-lg-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge-category">@Model.CategoryName</span>
+                    @if (isStaff)
+                    {
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="badge bg-secondary-subtle text-secondary">Product ID: #@Model.Id</span>
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-custom">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                        </div>
+                    }
+                </div>
+
+                <h2 class="fw-bold mb-2">@Model.Name</h2>
+
+                <!-- Rating summary -->
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="star-rating fs-5">
+                        <i class="bi bi-star-fill"></i>
+                        <span class="fw-bold text-dark ms-1">@Model.AverageRating.ToString("F1")</span>
+                    </div>
+                    <span class="text-muted">|</span>
+                    <a href="#reviewsSection" class="text-muted text-decoration-none small">
+                        <i class="bi bi-chat-left-text me-1"></i> @Model.ReviewCount customer reviews
+                    </a>
+                </div>
+
+                <!-- Price Block -->
+                <div class="d-flex align-items-baseline gap-3 mb-4 pb-3 border-bottom">
+                    <span class="display-6 fw-bold text-dark">$@Model.Price.ToString("N2")</span>
+                    <span class="text-muted small">Inclusive of all taxes</span>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark">About this item</h6>
+                    <p class="text-muted" style="line-height: 1.7;">
+                        @(Model.Description ?? "No extended description provided for this product.")
+                    </p>
+                </div>
+
+                <!-- Stock & Guarantee Badges -->
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <div class="p-2 border rounded-3 text-center small text-muted">
+                            <i class="bi bi-shield-check text-success fs-5 d-block mb-1"></i>
+                            100% Guaranteed
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 border rounded-3 text-center small text-muted">
+                            <i class="bi bi-box-seam text-primary fs-5 d-block mb-1"></i>
+                            Fast Dispatch
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Cart and Wishlist Actions -->
+                <div class="d-flex flex-wrap gap-3">
+                    <form asp-controller="Cart" asp-action="AddToCart" method="post" class="flex-grow-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button type="submit" class="btn btn-gradient btn-lg w-100" @(Model.InStock ? "" : "disabled")>
+                            <i class="bi bi-cart-plus"></i> @(Model.InStock ? "Add to Cart" : "Out of Stock")
+                        </button>
+                    </form>
+
+                    <form asp-controller="Wishlist" asp-action="Toggle" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button type="submit" class="btn btn-outline-custom btn-lg @(Model.IsInWishlist ? "text-danger border-danger" : "")" title="@(Model.IsInWishlist ? "Remove from Wishlist" : "Save to Wishlist")">
+                            <i class="bi @(Model.IsInWishlist ? "bi-heart-fill" : "bi-heart")"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating & Reviews Section -->
+    <div class="glass-card p-4 p-lg-5 mb-5" id="reviewsSection">
+        <div class="row g-4 mb-4 pb-4 border-bottom align-items-center">
+            <div class="col-md-5 text-center text-md-start">
+                <h4 class="fw-bold mb-1">Customer Reviews & Ratings</h4>
+                <p class="text-muted small mb-0">Verified ratings from real customers</p>
+            </div>
+            <div class="col-md-7 d-flex justify-content-md-end align-items-center gap-4">
+                <div class="text-center">
+                    <div class="display-5 fw-bold text-dark">@Model.AverageRating.ToString("F1")</div>
+                    <div class="star-rating justify-content-center mb-1">
+                        @for (int s = 1; s <= 5; s++)
+                        {
+                            <i class="bi @(s <= Math.Round(Model.AverageRating) ? "bi-star-fill" : "bi-star")"></i>
+                        }
+                    </div>
+                    <span class="text-muted small">Based on @Model.ReviewCount reviews</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Review Form (For Authenticated Users) -->
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="p-4 rounded-4 mb-4 border" style="background: #f8fafc;">
+                <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square text-primary me-2"></i> Write a Review for this Product</h6>
+                <form asp-action="AddReview" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ProductId" value="@Model.Id" />
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label-custom small">Your Rating (1 to 5 Stars)</label>
+                            <select name="Rating" class="form-select form-control-custom" required>
+                                <option value="5">⭐⭐⭐⭐⭐ (5 - Outstanding)</option>
+                                <option value="4">⭐⭐⭐⭐ (4 - Very Good)</option>
+                                <option value="3">⭐⭐⭐ (3 - Average)</option>
+                                <option value="2">⭐⭐ (2 - Poor)</option>
+                                <option value="1">⭐ (1 - Terrible)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-9">
+                            <label class="form-label-custom small">Your Review Feedback (Optional)</label>
+                            <input type="text" name="Comment" class="form-control form-control-custom" placeholder="Share your thoughts on build quality, durability, delivery..." maxlength="1000">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="bi bi-send"></i> Submit Verified Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-light border p-3 rounded-3 d-flex justify-content-between align-items-center mb-4">
+                <span class="text-muted small"><i class="bi bi-info-circle me-2"></i> Please sign in to submit a rating and review for this product.</span>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-outline-custom">Sign In</a>
+            </div>
+        }
+
+        <!-- Reviews List -->
+        @if (Model.Reviews.Any())
+        {
+            <div class="d-flex flex-column gap-3">
+                @foreach (var review in Model.Reviews)
+                {
+                    <div class="p-3 border rounded-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="fw-bold text-dark me-2">@review.UserName</span>
+                                <span class="text-muted small">• @review.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="star-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                }
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(review.Comment))
+                        {
+                            <p class="text-muted mb-2 small">@review.Comment</p>
+                        }
+
+                        @if (isStaff || (User.Identity?.Name == review.UserName))
+                        {
+                            <div class="d-flex justify-content-end">
+                                <form asp-action="DeleteReview" method="post" onsubmit="return confirm('Delete this review?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reviewId" value="@review.Id" />
+                                    <input type="hidden" name="productId" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-sm text-danger p-0 small text-decoration-none">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-chat-heart display-6 text-muted mb-2 d-block"></i>
+                Be the first to review this product and share your experience!
+            </div>
+        }
+    </div>
+
+    <!-- Related Products -->
+    @if (Model.RelatedProducts.Any())
+    {
+        <div class="mb-5">
+            <h4 class="fw-bold mb-4">Related Products in @Model.CategoryName</h4>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+                @foreach (var related in Model.RelatedProducts)
+                {
+                    <div class="col">
+                        <div class="product-card">
+                            <div class="product-img-wrapper">
+                                <a asp-action="Details" asp-route-id="@related.Id">
+                                    <img src="@(related.ImageUrl ?? "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60")" 
+                                         alt="@related.Name" loading="lazy">
+                                </a>
+                            </div>
+                            <div class="p-3 d-flex flex-column flex-grow-1">
+                                <h6 class="fw-bold mb-1">
+                                    <a asp-action="Details" asp-route-id="@related.Id" class="text-dark text-decoration-none text-truncate d-block">
+                                        @related.Name
+                                    </a>
+                                </h6>
+                                <div class="mt-auto pt-2 d-flex justify-content-between align-items-center">
+                                    <span class="product-price fs-6">$@related.Price.ToString("N2")</span>
+                                    <a asp-action="Details" asp-route-id="@related.Id" class="btn btn-sm btn-outline-custom">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

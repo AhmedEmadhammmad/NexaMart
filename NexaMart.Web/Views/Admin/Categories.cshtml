@@ -1,0 +1,201 @@
+@model NexaMart.Web.Models.AdminCategoryListViewModel
+@{
+    ViewData["Title"] = "Categories Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="mb-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-tags-fill text-info"></i> Categories Catalog Management
+            </h2>
+            <p class="text-muted mb-0 small">
+                Manage department taxonomy, display ordering, per-category product counts, and average customer ratings.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="CreateCategory" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-plus-circle"></i> Create New Category
+            </a>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Dashboard Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="admin-card p-3 mb-4 bg-white shadow-sm">
+        <form method="get" asp-action="Categories" class="row g-2 align-items-end">
+            <!-- Search by ID -->
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-semibold text-muted mb-1">Search by ID</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-hash"></i></span>
+                    <input type="number" name="SearchId" value="@Model.Filter.SearchId" class="form-control form-control-sm" placeholder="ID #" min="1" />
+                </div>
+            </div>
+
+            <!-- Search by Name -->
+            <div class="col-12 col-md-5">
+                <label class="form-label small fw-semibold text-muted mb-1">Category Name</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="SearchTerm" value="@Model.Filter.SearchTerm" class="form-control form-control-sm" placeholder="Filter by category name..." />
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-dark flex-grow-1">
+                    <i class="bi bi-funnel"></i> Apply Filter
+                </button>
+                <a asp-action="Categories" class="btn btn-sm btn-outline-secondary">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Categories Data Table -->
+    <div class="admin-table-container mb-4">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark">
+                Showing @Model.Categories.Items.Count of @Model.Categories.TotalCount Categories
+            </span>
+            <span class="badge bg-secondary">
+                Page @Model.Categories.PageIndex of @Model.Categories.TotalPages
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table admin-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th style="width: 70px;">Cover</th>
+                        <th>Category Name & Description</th>
+                        <th>Display Order</th>
+                        <th>Total Products</th>
+                        <th>Category Avg Rating</th>
+                        <th>Status</th>
+                        <th class="text-end" style="width: 170px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Categories.Items.Any())
+                    {
+                        @foreach (var cat in Model.Categories.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary font-monospace">#@cat.Id</span>
+                                </td>
+                                <td>
+                                    <img src="@(string.IsNullOrEmpty(cat.ImageUrl) ? "https://placehold.co/80x80?text=Cat" : cat.ImageUrl)" 
+                                         alt="@cat.Name" 
+                                         class="rounded-2 border" 
+                                         style="width: 46px; height: 46px; object-fit: cover;" />
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@cat.Name</div>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 320px;">@cat.Description</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">Order #@cat.DisplayOrder</span>
+                                </td>
+                                <td>
+                                    <a asp-action="Products" asp-route-CategoryId="@cat.Id" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none fw-bold px-2 py-1">
+                                        @cat.ProductCount Products &rarr;
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem;"></i>
+                                        <span class="fw-bold">@cat.AverageRating.ToString("F1")</span>
+                                        <small class="text-muted">/ 5.0</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (cat.IsActive)
+                                    {
+                                        <span class="badge badge-status-active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-status-blocked">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Products" asp-route-CategoryId="@cat.Id" class="btn btn-outline-primary" title="View Products in Category">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="EditCategory" asp-route-id="@cat.Id" class="btn btn-outline-secondary" title="Edit Category">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <form asp-action="ToggleCategoryStatus" asp-route-id="@cat.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn @(cat.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(cat.IsActive ? "Deactivate" : "Activate")">
+                                                <i class="bi @(cat.IsActive ? "bi-eye-slash" : "bi-eye")"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete category #@cat.Id? Note: Categories with products cannot be deleted.');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete Category">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-folder-x fs-2 d-block mb-2"></i>
+                                No categories found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        @if (Model.Categories.TotalPages > 1)
+        {
+            <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                <span class="small text-muted">
+                    Page @Model.Categories.PageIndex of @Model.Categories.TotalPages
+                </span>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(!Model.Categories.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Categories" 
+                           asp-route-PageIndex="@(Model.Categories.PageIndex - 1)" 
+                           asp-route-SearchId="@Model.Filter.SearchId"
+                           asp-route-SearchTerm="@Model.Filter.SearchTerm">&laquo; Prev</a>
+                    </li>
+                    @for (int p = 1; p <= Model.Categories.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Categories.PageIndex ? "active" : "")">
+                            <a class="page-link" asp-action="Categories" 
+                               asp-route-PageIndex="@p" 
+                               asp-route-SearchId="@Model.Filter.SearchId"
+                               asp-route-SearchTerm="@Model.Filter.SearchTerm">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.Categories.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Categories" 
+                           asp-route-PageIndex="@(Model.Categories.PageIndex + 1)" 
+                           asp-route-SearchId="@Model.Filter.SearchId"
+                           asp-route-SearchTerm="@Model.Filter.SearchTerm">Next &raquo;</a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>

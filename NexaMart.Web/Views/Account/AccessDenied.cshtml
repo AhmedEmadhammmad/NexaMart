@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container py-5 text-center" style="max-width: 540px;">
+    <div class="glass-card p-5">
+        <div class="brand-logo-icon mx-auto mb-4" style="width: 72px; height: 72px; border-radius: 20px; background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 2rem;">
+            <i class="bi bi-shield-x"></i>
+        </div>
+
+        <span class="badge bg-danger-subtle text-danger fw-bold px-3 py-1 rounded-pill mb-3">
+            HTTP 403 Forbidden
+        </span>
+
+        <h3 class="fw-bold mb-2">Access Denied</h3>
+        <p class="text-muted mb-4">
+            You do not have the required role permissions to view or perform operations on this page. If you are an administrator, please sign in through the Staff Portal with appropriate credentials.
+        </p>
+
+        <div class="d-flex flex-column gap-2">
+            <a asp-controller="Account" asp-action="StaffLogin" class="btn btn-gradient">
+                <i class="bi bi-shield-lock"></i> Switch to Staff Portal
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-custom">
+                <i class="bi bi-house"></i> Return to Homepage
+            </a>
+        </div>
+    </div>
+</div>

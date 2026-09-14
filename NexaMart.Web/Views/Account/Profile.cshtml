@@ -1,0 +1,98 @@
+@model NexaMart.Web.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container" style="max-width: 800px;">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Account Profile</h2>
+        <p class="text-muted small">Manage your personal details, contact information, and security settings</p>
+    </div>
+
+    <!-- Profile Overview Card -->
+    <div class="glass-card p-4 p-md-5 mb-4">
+        <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-4 pb-4 border-bottom mb-4">
+            <div class="brand-logo-icon" style="width: 72px; height: 72px; border-radius: 20px; font-size: 2rem;">
+                <i class="bi bi-person"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <h4 class="fw-bold mb-0">@Model.FullName</h4>
+                    @if (Model.RoleType == NexaMart.Domain.Enums.UserRoleType.SuperAdmin)
+                    {
+                        <span class="badge-role-superadmin"><i class="bi bi-shield-shaded"></i> SuperAdmin</span>
+                    }
+                    else if (Model.RoleType == NexaMart.Domain.Enums.UserRoleType.Admin)
+                    {
+                        <span class="badge-role-admin"><i class="bi bi-shield-check"></i> Admin</span>
+                    }
+                    else
+                    {
+                        <span class="badge-role-customer"><i class="bi bi-person-check"></i> Customer</span>
+                    }
+                </div>
+                <div class="text-muted small d-flex flex-wrap gap-3">
+                    <span><i class="bi bi-envelope me-1"></i> @Model.Email</span>
+                    <span><i class="bi bi-calendar3 me-1"></i> Member since @Model.CreatedAt.ToString("MMMM yyyy")</span>
+                    <span><i class="bi bi-hash me-1"></i> User ID: @Model.Id</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <form asp-action="Profile" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 rounded-3 small"></div>
+
+            <h5 class="fw-bold mb-3"><i class="bi bi-person-gear text-primary me-2"></i> Personal Details</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label-custom"></label>
+                    <input asp-for="FullName" class="form-control form-control-custom" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label-custom"></label>
+                    <input asp-for="PhoneNumber" class="form-control form-control-custom" placeholder="+1 (555) 000-0000" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="pt-4 border-top">
+                <h5 class="fw-bold mb-1"><i class="bi bi-shield-lock text-primary me-2"></i> Change Password</h5>
+                <p class="text-muted small mb-3">Leave password fields blank if you do not want to change your password.</p>
+
+                <div class="mb-3">
+                    <label asp-for="CurrentPassword" class="form-label-custom"></label>
+                    <input asp-for="CurrentPassword" class="form-control form-control-custom" placeholder="••••••••" />
+                    <span asp-validation-for="CurrentPassword" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <label asp-for="NewPassword" class="form-label-custom"></label>
+                        <input asp-for="NewPassword" class="form-control form-control-custom" placeholder="••••••••" />
+                        <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="ConfirmNewPassword" class="form-label-custom"></label>
+                        <input asp-for="ConfirmNewPassword" class="form-control form-control-custom" placeholder="••••••••" />
+                        <span asp-validation-for="ConfirmNewPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-gradient">
+                    <i class="bi bi-check-circle"></i> Save Profile Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

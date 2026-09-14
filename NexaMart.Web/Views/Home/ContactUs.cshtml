@@ -1,0 +1,206 @@
+@model NexaMart.Web.Models.ContactComplaintViewModel
+@{
+    ViewData["Title"] = "Contact Us & Customer Support";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active">Contact Us & Support</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="text-center mb-5">
+        <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill mb-2">
+            <i class="bi bi-headset"></i> Customer Care & Resolutions
+        </span>
+        <h1 class="display-6 fw-bold mb-2">How Can We Help You Today?</h1>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+            Have a question, feedback, or need to file a formal complaint regarding an order or product? Fill out the form below and our customer success team will investigate promptly.
+        </p>
+    </div>
+
+    <div class="row g-5">
+        <!-- Left Column: Support Channels & Direct Assistance -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <!-- Channel 1: Customer Helpline -->
+                <div class="glass-card p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-3 p-3 text-primary" style="background: rgba(99, 102, 241, 0.1);">
+                            <i class="bi bi-telephone-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Phone Support</h6>
+                            <span class="text-muted small">Toll-free customer line</span>
+                        </div>
+                    </div>
+                    <p class="fw-bold fs-5 text-dark mb-1">+1 (800) 555-NEXA</p>
+                    <p class="text-muted small mb-0">Mon – Fri: 8am – 10pm EST<br />Sat – Sun: 9am – 6pm EST</p>
+                </div>
+
+                <!-- Channel 2: Official Email Desk -->
+                <div class="glass-card p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-3 p-3 text-info" style="background: rgba(6, 182, 212, 0.1);">
+                            <i class="bi bi-envelope-check-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Email Support</h6>
+                            <span class="text-muted small">Direct ticket dispatch</span>
+                        </div>
+                    </div>
+                    <p class="mb-1">
+                        <a href="mailto:support@nexamart.com" class="fw-semibold text-primary text-decoration-none">support@nexamart.com</a>
+                    </p>
+                    <p class="text-muted small mb-0">
+                        Complaints Desk: <a href="mailto:complaints@nexamart.com" class="text-muted text-decoration-none">complaints@nexamart.com</a>
+                    </p>
+                </div>
+
+                <!-- Channel 3: Service Resolution Guarantee -->
+                <div class="glass-card p-4" style="border-left: 4px solid var(--primary);">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <i class="bi bi-shield-check text-success fs-3"></i>
+                        <h6 class="fw-bold mb-0">Our Resolution Pledge</h6>
+                    </div>
+                    <p class="text-muted small mb-0" style="line-height: 1.6;">
+                        All customer complaints and escalations receive a dedicated case officer with a response guarantee within <strong>24 business hours</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Complaints & Contact Submission Form -->
+        <div class="col-lg-8">
+            <div class="glass-card p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <h3 class="fw-bold mb-1">Submit Inquiry or File a Complaint</h3>
+                        <p class="text-muted small mb-0">Please provide detailed information so we can expedite your resolution</p>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3 rounded-pill d-none d-sm-inline-block">
+                        <i class="bi bi-shield-lock"></i> Confidential
+                    </span>
+                </div>
+
+                <form asp-action="SubmitComplaint" method="post" id="complaintForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 rounded-3 small"></div>
+
+                    <!-- Personal Info Row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label-custom"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                                    <i class="bi bi-person text-muted"></i>
+                                </span>
+                                <input asp-for="FullName" class="form-control form-control-custom border-start-0" placeholder="Your full legal name" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label-custom"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                                    <i class="bi bi-envelope text-muted"></i>
+                                </span>
+                                <input asp-for="Email" type="email" class="form-control form-control-custom border-start-0" placeholder="name@domain.com" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Phone & Topic Selection -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label-custom"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                                    <i class="bi bi-telephone text-muted"></i>
+                                </span>
+                                <input asp-for="PhoneNumber" class="form-control form-control-custom border-start-0" placeholder="+1 (555) 000-0000" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                            </div>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="InquiryType" class="form-label-custom"></label>
+                            <select asp-for="InquiryType" class="form-select form-control-custom">
+                                <option value="1">💬 General Inquiry</option>
+                                <option value="2">🚚 Order Delivery Delay</option>
+                                <option value="3">📦 Damaged or Defective Product</option>
+                                <option value="4">💳 Payment or Refund Issue</option>
+                                <option value="5">⚠️ Formal Service Complaint / Escalation</option>
+                                <option value="6">📌 Other</option>
+                            </select>
+                            <span asp-validation-for="InquiryType" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Order Number & Priority Row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="OrderNumber" class="form-label-custom"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                                    <i class="bi bi-receipt text-muted"></i>
+                                </span>
+                                <input asp-for="OrderNumber" class="form-control form-control-custom border-start-0" placeholder="e.g. ORD-2026-XXXX (Optional)" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                            </div>
+                            <span asp-validation-for="OrderNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Priority" class="form-label-custom"></label>
+                            <select asp-for="Priority" class="form-select form-control-custom">
+                                <option value="1">🟢 Normal Priority</option>
+                                <option value="2">🟡 High Priority</option>
+                                <option value="3">🔴 Urgent (Immediate Attention)</option>
+                            </select>
+                            <span asp-validation-for="Priority" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Subject -->
+                    <div class="mb-3">
+                        <label asp-for="Subject" class="form-label-custom"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                                <i class="bi bi-chat-left-text text-muted"></i>
+                            </span>
+                            <input asp-for="Subject" class="form-control form-control-custom border-start-0" placeholder="Brief summary of your complaint or question" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                        </div>
+                        <span asp-validation-for="Subject" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Detailed Message -->
+                    <div class="mb-4">
+                        <label asp-for="Message" class="form-label-custom"></label>
+                        <textarea asp-for="Message" rows="5" class="form-control form-control-custom" placeholder="Please describe your complaint or question in detail. Mention product names, delivery dates, or relevant transaction details..."></textarea>
+                        <span asp-validation-for="Message" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">
+                            <i class="bi bi-clock-history"></i> Average response time: &lt; 24h
+                        </span>
+                        <button type="submit" class="btn btn-gradient px-4 py-2">
+                            <i class="bi bi-send-fill"></i> Submit Formal Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

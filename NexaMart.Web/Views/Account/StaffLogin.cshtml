@@ -1,0 +1,81 @@
+@model NexaMart.Web.Models.StaffLoginViewModel
+@{
+    ViewData["Title"] = "Staff & Administration Portal";
+}
+
+<div class="auth-wrapper">
+    <div class="auth-card" style="border-top: 4px solid var(--primary);">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="brand-logo-icon mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 14px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                <i class="bi bi-shield-lock-fill text-warning fs-3"></i>
+            </div>
+            <span class="badge bg-warning-subtle text-warning fw-bold px-3 py-1 rounded-pill mb-2">
+                <i class="bi bi-lock-fill"></i> Restricted Portal
+            </span>
+            <h3 class="fw-bold mb-1">Staff Administration</h3>
+            <p class="text-muted small">Sign in using your verified Staff ID and assigned role</p>
+        </div>
+
+        <form asp-action="StaffLogin" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 rounded-3 small"></div>
+
+            <!-- Staff ID (Numeric) -->
+            <div class="mb-3">
+                <label asp-for="StaffId" class="form-label-custom"></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                        <i class="bi bi-hash text-muted"></i>
+                    </span>
+                    <input asp-for="StaffId" class="form-control form-control-custom border-start-0" placeholder="e.g. 1, 2, 3" type="number" autofocus style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                </div>
+                <span asp-validation-for="StaffId" class="text-danger small"></span>
+            </div>
+
+            <!-- Role Selection (Admin / SuperAdmin) -->
+            <div class="mb-3">
+                <label asp-for="SelectedRole" class="form-label-custom"></label>
+                <select asp-for="SelectedRole" class="form-select form-control-custom">
+                    <option value="1">🛡️ Admin (Store & Catalog Manager)</option>
+                    <option value="2">👑 SuperAdmin (Full System Administrator)</option>
+                </select>
+                <span asp-validation-for="SelectedRole" class="text-danger small"></span>
+                <span class="text-muted small d-block mt-1">Select the exact role assigned to your staff credential.</span>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label-custom"></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                        <i class="bi bi-key text-muted"></i>
+                    </span>
+                    <input asp-for="Password" class="form-control form-control-custom border-start-0" placeholder="••••••••" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                </div>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="mb-4 form-check">
+                <input asp-for="RememberMe" class="form-check-input" id="staffRememberMeCheck" />
+                <label asp-for="RememberMe" class="form-check-label text-muted small" for="staffRememberMeCheck">Remember staff session</label>
+            </div>
+
+            <button type="submit" class="btn btn-gradient w-100 py-2 mb-3 fs-6">
+                <i class="bi bi-shield-check"></i> Authorize & Open Console
+            </button>
+
+            <div class="text-center pt-3 border-top">
+                <a asp-action="Login" class="text-muted text-decoration-none small">
+                    <i class="bi bi-arrow-left"></i> Back to Customer Sign In
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

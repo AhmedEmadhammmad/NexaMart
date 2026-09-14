@@ -1,0 +1,264 @@
+@model NexaMart.Web.Models.SuperAdminUserListViewModel
+@{
+    ViewData["Title"] = "User Accounts Governance";
+    Layout = "_AdminLayout";
+}
+
+<div class="mb-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-people-fill text-primary"></i> User Accounts Governance
+            </h2>
+            <p class="text-muted mb-0 small">
+                Search, inspect, and manage system accounts. Promote roles, block fraudulent users, and monitor customer engagement.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="CreateAdmin" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-person-plus-fill"></i> Provision Admin Account
+            </a>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> SuperAdmin Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Status Badges Tabs -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a asp-action="Users" class="btn btn-sm @(!Model.RoleFilter.HasValue && !Model.IsActiveFilter.HasValue ? "btn-dark" : "btn-outline-dark")">
+            All Accounts <span class="badge bg-secondary ms-1">@Model.AllUsersCount</span>
+        </a>
+        <a asp-action="Users" asp-route-role="@NexaMart.Domain.Enums.UserRoleType.Customer" class="btn btn-sm @(Model.RoleFilter == NexaMart.Domain.Enums.UserRoleType.Customer ? "btn-primary" : "btn-outline-primary")">
+            Customers <span class="badge bg-primary bg-opacity-25 text-dark ms-1">@Model.CustomersCount</span>
+        </a>
+        <a asp-action="Users" asp-route-role="@NexaMart.Domain.Enums.UserRoleType.Admin" class="btn btn-sm @(Model.RoleFilter == NexaMart.Domain.Enums.UserRoleType.Admin ? "btn-info text-white" : "btn-outline-info")">
+            Staff Admins <span class="badge bg-info text-white ms-1">@Model.AdminsCount</span>
+        </a>
+        <a asp-action="Users" asp-route-isActive="false" class="btn btn-sm @(Model.IsActiveFilter == false ? "btn-danger" : "btn-outline-danger")">
+            Blocked Users <span class="badge bg-danger ms-1">@Model.BlockedCount</span>
+        </a>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="admin-card p-3 mb-4 bg-white shadow-sm">
+        <form method="get" asp-action="Users" class="row g-2 align-items-end">
+            <!-- Search by ID -->
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-semibold text-muted mb-1">User ID #</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-hash"></i></span>
+                    <input type="number" name="searchId" value="@(Context.Request.Query["searchId"])" class="form-control form-control-sm" placeholder="ID #" min="1" />
+                </div>
+            </div>
+
+            <!-- Search by Name / Email -->
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Name, Email, or Phone</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control form-control-sm" placeholder="Search account..." />
+                </div>
+            </div>
+
+            <!-- Role Filter -->
+            <div class="col-6 col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Role Filter</label>
+                <select name="role" class="form-select form-select-sm">
+                    <option value="">All Roles</option>
+                    @foreach (NexaMart.Domain.Enums.UserRoleType r in Enum.GetValues(typeof(NexaMart.Domain.Enums.UserRoleType)))
+                    {
+                        <option value="@r" selected="@(Model.RoleFilter == r)">@r</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Buttons -->
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-dark flex-grow-1">
+                    <i class="bi bi-funnel"></i> Apply Filter
+                </button>
+                <a asp-action="Users" class="btn btn-sm btn-outline-secondary">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Users Table -->
+    <div class="admin-table-container mb-4">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark">
+                Showing @Model.Users.Items.Count of @Model.Users.TotalCount Accounts
+            </span>
+            <span class="badge bg-secondary">
+                Page @Model.Users.PageIndex of @Model.Users.TotalPages
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table admin-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>User Profile</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Last Login</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                        <th class="text-end" style="width: 250px;">Account Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users.Items.Any())
+                    {
+                        @foreach (var user in Model.Users.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary font-monospace">#@user.Id</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@user.FullName</div>
+                                    <small class="text-muted">@user.Email</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@(string.IsNullOrEmpty(user.PhoneNumber) ? "—" : user.PhoneNumber)</small>
+                                </td>
+                                <td>
+                                    @if (user.RoleType == NexaMart.Domain.Enums.UserRoleType.SuperAdmin)
+                                    {
+                                        <span class="badge badge-role-superadmin px-2 py-1">SuperAdmin</span>
+                                    }
+                                    else if (user.RoleType == NexaMart.Domain.Enums.UserRoleType.Admin)
+                                    {
+                                        <span class="badge badge-role-admin px-2 py-1">Admin</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-role-customer px-2 py-1">Customer</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge badge-status-active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-status-blocked">Blocked</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">@user.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@(user.LastLoginAt.HasValue ? user.LastLoginAt.Value.ToString("yyyy-MM-dd") : "Never")</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@user.OrdersCount</span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-success">@user.TotalSpent.ToString("C")</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end align-items-center gap-1">
+                                        <!-- View Details -->
+                                        <a asp-action="UserDetails" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="Full User Details & Orders">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+
+                                        <!-- Promote/Change Role Dropdown -->
+                                        <div class="dropdown d-inline">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" title="Change Role">
+                                                Role
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                @foreach (NexaMart.Domain.Enums.UserRoleType roleOption in Enum.GetValues(typeof(NexaMart.Domain.Enums.UserRoleType)))
+                                                {
+                                                    if (roleOption != user.RoleType)
+                                                    {
+                                                        <li>
+                                                            <form asp-action="PromoteRole" method="post">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                                <input type="hidden" name="newRole" value="@roleOption" />
+                                                                <button type="submit" class="dropdown-item small py-1" onclick="return confirm('Promote/Change role of @user.FullName to @roleOption?');">
+                                                                    Set as @roleOption
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                }
+                                            </ul>
+                                        </div>
+
+                                        <!-- Toggle Status (Block / Unblock) -->
+                                        <form asp-action="ToggleUserStatus" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userId" value="@user.Id" />
+                                            <button type="submit" class="btn btn-sm @(user.IsActive ? "btn-outline-warning" : "btn-outline-success")" 
+                                                    title="@(user.IsActive ? "Block Account" : "Activate Account")"
+                                                    onclick="return confirm('@(user.IsActive ? "Block" : "Activate") account of @user.FullName?');">
+                                                <i class="bi @(user.IsActive ? "bi-lock" : "bi-unlock")"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center py-5 text-muted">
+                                <i class="bi bi-person-x fs-2 d-block mb-2"></i>
+                                No user accounts match your search parameters.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.Users.TotalPages > 1)
+        {
+            <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                <span class="small text-muted">
+                    Page @Model.Users.PageIndex of @Model.Users.TotalPages
+                </span>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(!Model.Users.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Users" 
+                           asp-route-page="@(Model.Users.PageIndex - 1)" 
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-role="@Model.RoleFilter"
+                           asp-route-isActive="@Model.IsActiveFilter">&laquo; Prev</a>
+                    </li>
+                    @for (int p = 1; p <= Model.Users.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Users.PageIndex ? "active" : "")">
+                            <a class="page-link" asp-action="Users" 
+                               asp-route-page="@p" 
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-role="@Model.RoleFilter"
+                               asp-route-isActive="@Model.IsActiveFilter">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.Users.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Users" 
+                           asp-route-page="@(Model.Users.PageIndex + 1)" 
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-role="@Model.RoleFilter"
+                           asp-route-isActive="@Model.IsActiveFilter">Next &raquo;</a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>

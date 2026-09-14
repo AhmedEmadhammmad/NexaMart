@@ -3,208 +3,263 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - NexaMart | Multi-Vendor E-Commerce Marketplace</title>
-    <meta name="description" content="NexaMart - Where Vendors Meet Customers. Explore thousands of high quality products from verified vendors." />
-    
-    <!-- Google Fonts: Outfit & Inter & JetBrains Mono -->
+    <title>@ViewData["Title"] - NexaMart Premium Store</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-    <!-- Bootstrap 5 CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 & Bootstrap Icons -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    
-    <!-- NexaMart Custom Design System -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <!-- Top Announcement Bar -->
-    <div class="nexa-topbar">
-        <div class="container d-flex justify-content-between align-items-center">
-            <div>
-                <i class="fa-solid fa-bolt me-1 text-warning"></i>
-                <span>Special Launch Offer: <strong>Free Express Delivery</strong> on your first order with code <strong>NEXA2026</strong></span>
-            </div>
-            <div class="d-none d-md-flex align-items-center gap-3">
-                <span><i class="fa-solid fa-headset me-1"></i> 24/7 Support: +20 100 000 0000</span>
-                <span>|</span>
-                <span class="badge bg-dark border border-secondary text-light">EGP / Arabic & English</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Sticky Navbar -->
-    <header class="nexa-header">
-        <div class="container">
-            <nav class="nexa-navbar d-flex align-items-center justify-content-between gap-3">
+    <!-- Top Modern Navbar -->
+    <header>
+        <nav class="navbar navbar-expand-lg nexamart-navbar">
+            <div class="container">
                 <!-- Brand Logo -->
-                <a class="navbar-brand d-flex align-items-center gap-2 m-0" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo.jpg" alt="NexaMart Logo" class="brand-logo-img" />
-                    <span class="d-none d-lg-inline-block fw-bold text-white fs-4" style="font-family: var(--font-heading);">
-                        Nexa<span style="color: var(--color-primary-light);">Mart</span>
-                    </span>
+                <a class="brand-logo" asp-controller="Home" asp-action="Index">
+                    <div class="brand-logo-icon">
+                        <i class="bi bi-bag-check-fill"></i>
+                    </div>
+                    <span>Nexa<span style="color: var(--primary);">Mart</span></span>
                 </a>
 
-                <!-- Global Search Form -->
-                <form class="nexa-search-form d-none d-md-flex flex-grow-1 mx-2" onsubmit="event.preventDefault();">
-                    <select class="category-select-pill d-none d-lg-block">
-                        <option value="">All Categories</option>
-                        <option value="electronics">Electronics</option>
-                        <option value="fashion">Fashion & Apparel</option>
-                        <option value="home">Home & Living</option>
-                        <option value="beauty">Beauty & Care</option>
-                        <option value="sports">Sports & Outdoor</option>
-                    </select>
-                    <input type="text" class="search-input-pill" placeholder="Search products, brands, verified vendors..." />
-                    <button type="submit" class="search-submit-btn" title="Search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
-                </form>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-                <!-- Actions: Become a Vendor, Wishlist, Cart, Account -->
-                <div class="d-flex align-items-center gap-2">
-                    <a href="#become-vendor" class="btn-vendor-cta d-none d-xl-inline-flex">
-                        <i class="fa-solid fa-store"></i>
-                        <span>Become a Vendor</span>
-                    </a>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <!-- Navigation Links (Centered) -->
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1 gap-lg-2">
+                        <li class="nav-item">
+                            <a class="nav-link-custom" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-custom" asp-controller="Products" asp-action="Index">
+                                <i class="bi bi-grid"></i> Products
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-custom" asp-controller="Categories" asp-action="Index">
+                                <i class="bi bi-tags"></i> Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-custom" asp-controller="Home" asp-action="ContactUs">
+                                <i class="bi bi-headset"></i> Support & Complaints
+                            </a>
+                        </li>
+                    </ul>
 
-                    <a href="#wishlist" class="nav-action-btn" title="Wishlist">
-                        <i class="fa-regular fa-heart fs-5"></i>
-                        <span class="badge-counter">0</span>
-                    </a>
+                    <!-- Authentication & Staff Controls (Right Side) -->
+                    <div class="d-flex align-items-center gap-2">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <!-- Role Badge -->
+                            @if (User.IsInRole("SuperAdmin"))
+                            {
+                                <span class="badge-role-superadmin d-none d-md-inline-block">
+                                    <i class="bi bi-shield-shaded"></i> SuperAdmin
+                                </span>
+                            }
+                            else if (User.IsInRole("Admin"))
+                            {
+                                <span class="badge-role-admin d-none d-md-inline-block">
+                                    <i class="bi bi-shield-check"></i> Admin
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-role-customer d-none d-md-inline-block">
+                                    <i class="bi bi-person-check"></i> Customer
+                                </span>
+                            }
 
-                    <a href="#cart" class="nav-action-btn" title="Cart">
-                        <i class="fa-solid fa-cart-shopping fs-5"></i>
-                        <span class="badge-counter">0</span>
-                    </a>
+                            <!-- Wishlist Quick Icon -->
+                            <a asp-controller="Wishlist" asp-action="Index" class="btn btn-outline-custom p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="My Wishlist">
+                                <i class="bi bi-heart text-danger"></i>
+                            </a>
 
-                    <a href="#login" class="btn-nexa-outline py-2 px-3 fs-6 d-none d-sm-inline-flex">
-                        <i class="fa-regular fa-user me-1"></i>
-                        <span>Sign In</span>
-                    </a>
-                </div>
-            </nav>
-        </div>
+                            <!-- Cart Quick Icon -->
+                            <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-custom p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Shopping Cart">
+                                <i class="bi bi-cart3 text-primary"></i>
+                            </a>
 
-        <!-- Sub-Navigation Bar -->
-        <div class="nexa-subnav">
-            <div class="container d-flex align-items-center justify-content-between overflow-auto">
-                <div class="d-flex align-items-center gap-1">
-                    <a class="subnav-link active" asp-controller="Home" asp-action="Index">
-                        <i class="fa-solid fa-house"></i> Home
-                    </a>
-                    <a class="subnav-link" href="#categories">
-                        <i class="fa-solid fa-layer-group"></i> Categories
-                    </a>
-                    <a class="subnav-link" href="#deals">
-                        <i class="fa-solid fa-fire text-danger"></i> Flash Deals
-                    </a>
-                    <a class="subnav-link" href="#products">
-                        <i class="fa-solid fa-box-open"></i> Products
-                    </a>
-                    <a class="subnav-link" href="#vendors">
-                        <i class="fa-solid fa-shop"></i> Verified Vendors
-                    </a>
-                </div>
-                <div class="d-none d-lg-flex align-items-center gap-3 text-secondary small">
-                    <span><i class="fa-solid fa-shield-halved text-success me-1"></i> 100% Secure Checkout</span>
-                    <span><i class="fa-solid fa-rotate-left text-info me-1"></i> 14-Day Free Returns</span>
+                            <!-- User Profile Dropdown -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-custom dropdown-toggle d-flex align-items-center gap-2" type="button" id="userMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>@User.Identity.Name</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius: var(--radius-md); padding: 0.5rem;" aria-labelledby="userMenuBtn">
+                                    <li>
+                                        <a class="dropdown-item py-2 rounded-2" asp-controller="Account" asp-action="Profile">
+                                            <i class="bi bi-person me-2"></i> My Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 rounded-2" asp-controller="Orders" asp-action="Index">
+                                            <i class="bi bi-receipt me-2"></i> My Orders & Invoices
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 rounded-2" asp-controller="Wishlist" asp-action="Index">
+                                            <i class="bi bi-heart me-2 text-danger"></i> My Wishlist
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 rounded-2" asp-controller="Cart" asp-action="Index">
+                                            <i class="bi bi-cart3 me-2 text-primary"></i> Shopping Cart
+                                        </a>
+                                    </li>
+                                    @if (User.IsInRole("SuperAdmin"))
+                                    {
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item py-2 rounded-2 text-primary fw-semibold" asp-controller="SuperAdmin" asp-action="Dashboard">
+                                                <i class="bi bi-speedometer2 me-2"></i> SuperAdmin Console
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item py-2 rounded-2 text-primary fw-semibold" asp-controller="Admin" asp-action="Dashboard">
+                                                <i class="bi bi-kanban me-2"></i> Store Admin Panel
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2 rounded-2" asp-controller="Products" asp-action="Create">
+                                                <i class="bi bi-plus-circle me-2"></i> Add New Product
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2 rounded-2" asp-controller="Categories" asp-action="Create">
+                                                <i class="bi bi-folder-plus me-2"></i> Add New Category
+                                            </a>
+                                        </li>
+                                    }
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline w-100">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item py-2 rounded-2 text-danger">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Guest Links -->
+                            <a class="btn btn-soft" asp-controller="Account" asp-action="Login">
+                                <i class="bi bi-box-arrow-in-right"></i> Sign In
+                            </a>
+                            <a class="btn btn-gradient" asp-controller="Account" asp-action="Register">
+                                <i class="bi bi-person-plus"></i> Join Free
+                            </a>
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
+        </nav>
     </header>
 
+    <!-- Global Notifications (Flash Messages) -->
+    <div class="container mt-3">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm d-flex align-items-center gap-2" style="border-radius: var(--radius-md); background: #ecfdf5; color: #065f46;" role="alert">
+                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                <div class="flex-grow-1">@TempData["SuccessMessage"]</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm d-flex align-items-center gap-2" style="border-radius: var(--radius-md); background: #fef2f2; color: #991b1b;" role="alert">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                <div class="flex-grow-1">@TempData["ErrorMessage"]</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+
     <!-- Main Content Body -->
-    <main role="main">
+    <main role="main" class="flex-grow-1 py-4">
         @RenderBody()
     </main>
 
-    <!-- NexaMart Footer -->
-    <footer class="nexa-footer">
+    <!-- Modern Footer -->
+    <footer class="footer-custom">
         <div class="container">
-            <div class="row g-4">
-                <!-- Brand Info -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <img src="~/images/logo.jpg" alt="NexaMart" class="footer-logo" />
-                        <h4 class="m-0 fw-bold">Nexa<span style="color: var(--color-primary-light);">Mart</span></h4>
-                    </div>
-                    <p class="footer-desc">
-                        NexaMart is a multi-vendor marketplace connecting passionate vendors with valued customers worldwide.
-                        Discover quality products, enjoy secure checkout, and experience seamless multi-vendor order tracking.
-                    </p>
-                    <div class="social-links-bar">
-                        <a href="#" class="social-link-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" class="social-link-btn" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
-                        <a href="#" class="social-link-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" class="social-link-btn" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                    </div>
-                </div>
-
-                <!-- Marketplace Links -->
-                <div class="col-lg-2 col-md-6">
-                    <h5 class="footer-heading">Marketplace</h5>
-                    <ul class="footer-links">
-                        <li><a href="#products">All Products</a></li>
-                        <li><a href="#categories">Categories</a></li>
-                        <li><a href="#deals">Flash Deals</a></li>
-                        <li><a href="#vendors">Top Stores</a></li>
-                        <li><a href="#">New Arrivals</a></li>
-                    </ul>
-                </div>
-
-                <!-- Vendor Center -->
-                <div class="col-lg-3 col-md-6">
-                    <h5 class="footer-heading">Vendor Hub</h5>
-                    <ul class="footer-links">
-                        <li><a href="#become-vendor">Sell on NexaMart</a></li>
-                        <li><a href="#">Vendor Dashboard</a></li>
-                        <li><a href="#">Commission Policy</a></li>
-                        <li><a href="#">Seller Success Stories</a></li>
-                        <li><a href="#">Vendor Terms of Service</a></li>
-                    </ul>
-                </div>
-
-                <!-- Customer Care & Security -->
-                <div class="col-lg-3 col-md-6">
-                    <h5 class="footer-heading">Customer Care</h5>
-                    <ul class="footer-links">
-                        <li><a href="#">Track Your Order</a></li>
-                        <li><a href="#">Shipping Policy</a></li>
-                        <li><a href="#">Returns & Refunds</a></li>
-                        <li><a href="#">Help Center & FAQ</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                    </ul>
-                    <div class="mt-3">
-                        <span class="small text-secondary d-block mb-2">Guaranteed Safe & Secure Checkout:</span>
-                        <div class="d-flex gap-2 text-secondary fs-4">
-                            <i class="fa-brands fa-stripe text-info" title="Stripe Secure"></i>
-                            <i class="fa-brands fa-cc-visa text-light" title="Visa"></i>
-                            <i class="fa-brands fa-cc-mastercard text-danger" title="Mastercard"></i>
-                            <i class="fa-solid fa-money-bill-wave text-success" title="Cash on Delivery"></i>
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <div class="brand-logo mb-3">
+                        <div class="brand-logo-icon">
+                            <i class="bi bi-bag-check-fill"></i>
                         </div>
+                        <span>Nexa<span style="color: var(--primary);">Mart</span></span>
                     </div>
+                    <p class="text-muted mb-3" style="max-width: 320px;">
+                        Your destination for premium electronics, fashion, and lifestyle essentials with verified quality and fast nationwide delivery.
+                    </p>
+                    <div class="d-flex gap-3 fs-5 text-muted">
+                        <a href="#" class="text-muted"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <h6 class="fw-bold mb-3">Shop Catalog</h6>
+                    <ul class="list-unstyled text-muted small d-flex flex-column gap-2">
+                        <li><a asp-controller="Products" asp-action="Index" class="text-muted text-decoration-none">All Products</a></li>
+                        <li><a asp-controller="Categories" asp-action="Index" class="text-muted text-decoration-none">Browse Categories</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" asp-route-SortBy="top_selling" class="text-muted text-decoration-none">Top Rated</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" asp-route-SortBy="newest" class="text-muted text-decoration-none">New Arrivals</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <h6 class="fw-bold mb-3">Account & Orders</h6>
+                    <ul class="list-unstyled text-muted small d-flex flex-column gap-2">
+                        <li><a asp-controller="Orders" asp-action="Index" class="text-muted text-decoration-none">My Orders & Invoices</a></li>
+                        <li><a asp-controller="Cart" asp-action="Index" class="text-muted text-decoration-none">Shopping Cart</a></li>
+                        <li><a asp-controller="Wishlist" asp-action="Index" class="text-muted text-decoration-none">Saved Wishlist</a></li>
+                        <li><a asp-controller="Account" asp-action="Profile" class="text-muted text-decoration-none">My Profile</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4">
+                    <h6 class="fw-bold mb-3">Customer Support & Resolutions</h6>
+                    <p class="text-muted small mb-2"><i class="bi bi-headset me-2 text-primary"></i> 24/7 Dedicated Support Hotline: +1 (800) 555-NEXA</p>
+                    <p class="text-muted small mb-2"><i class="bi bi-envelope me-2 text-primary"></i> support@nexamart.com</p>
+                    <p class="text-muted small mb-3"><i class="bi bi-shield-check me-2 text-success"></i> 100% Secure Checkout & SSL Encryption</p>
+                    <a asp-controller="Home" asp-action="ContactUs" class="btn btn-sm btn-outline-custom">
+                        <i class="bi bi-chat-dots"></i> File a Complaint or Inquiry
+                    </a>
                 </div>
             </div>
 
-            <!-- Footer Bottom -->
-            <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                <div>
-                    &copy; 2026 <strong>NexaMart Inc.</strong> All Rights Reserved. Built with ASP.NET Core 8 & Onion Architecture.
-                </div>
-                <div class="d-flex gap-3 small">
-                    <a href="#" class="text-secondary">Terms & Conditions</a>
-                    <a href="#" class="text-secondary">Privacy Notice</a>
-                    <a href="#" class="text-secondary">Security</a>
+            <div class="border-top pt-3 d-flex flex-column flex-sm-row justify-content-between align-items-center text-muted small">
+                <div>&copy; @DateTime.UtcNow.Year NexaMart Inc. All rights reserved.</div>
+                <div class="d-flex gap-3 mt-2 mt-sm-0">
+                    <a asp-controller="Home" asp-action="Privacy" class="text-muted text-decoration-none">Privacy Policy</a>
+                    <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

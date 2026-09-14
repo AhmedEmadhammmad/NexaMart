@@ -1,0 +1,64 @@
+@model NexaMart.Web.Models.CategoryFormViewModel
+@{
+    ViewData["Title"] = "Create New Category";
+}
+
+<div class="container" style="max-width: 650px;">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-muted text-decoration-none small d-inline-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-arrow-left"></i> Back to Categories
+        </a>
+        <h2 class="fw-bold mb-1">Create New Category</h2>
+        <p class="text-muted small">Add a new product department to organize the store catalog</p>
+    </div>
+
+    <div class="glass-card p-4 p-md-5">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 rounded-3 small"></div>
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label-custom"></label>
+                <input asp-for="Name" class="form-control form-control-custom" placeholder="e.g. Smart Watches & Wearables" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label-custom"></label>
+                <textarea asp-for="Description" class="form-control form-control-custom" rows="3" placeholder="Brief summary of items in this department..."></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ImageUrl" class="form-label-custom"></label>
+                <input asp-for="ImageUrl" class="form-control form-control-custom" id="categoryImageUrl" placeholder="https://images.unsplash.com/..." />
+                <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <label asp-for="DisplayOrder" class="form-label-custom"></label>
+                    <input asp-for="DisplayOrder" class="form-control form-control-custom" type="number" />
+                    <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-6 d-flex align-items-end">
+                    <div class="form-check form-switch p-3 border rounded-3 w-100" style="background: var(--light-bg);">
+                        <input asp-for="IsActive" class="form-check-input ms-0 me-2" role="switch" id="isActiveSwitch">
+                        <label class="form-check-label fw-semibold small" for="isActiveSwitch">Active & Visible in Catalog</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-gradient flex-grow-1">
+                    <i class="bi bi-check-circle"></i> Save Category
+                </button>
+                <a asp-action="Index" class="btn btn-outline-custom">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

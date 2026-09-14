@@ -1,0 +1,293 @@
+@model NexaMart.Web.Models.ProductListViewModel
+@{
+    ViewData["Title"] = "Products Catalog";
+    bool isStaff = ViewBag.IsStaff ?? false;
+}
+
+<div class="container">
+    <!-- Header & Staff Action -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1 rounded-pill mb-1">Catalog</span>
+            <h2 class="fw-bold mb-0">Shop All Products</h2>
+            <p class="text-muted small mb-0">Showing @Model.Products.TotalCount products available across all categories</p>
+        </div>
+
+        @if (isStaff)
+        {
+            <div>
+                <a asp-action="Create" class="btn btn-gradient">
+                    <i class="bi bi-plus-circle"></i> Add New Product
+                </a>
+            </div>
+        }
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="glass-card p-3 p-md-4 mb-4">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <!-- Search by Name (All Users) -->
+            <div class="@(isStaff ? "col-md-4" : "col-md-5")">
+                <label class="form-label-custom small">Search by Name</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="SearchTerm" value="@Model.Filter.SearchTerm" class="form-control form-control-custom border-start-0" placeholder="Product name or keyword..." style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
+                </div>
+            </div>
+
+            <!-- Search by ID (Staff Only) -->
+            @if (isStaff)
+            {
+                <div class="col-md-2">
+                    <label class="form-label-custom small text-primary"><i class="bi bi-shield-lock"></i> Product ID</label>
+                    <input type="number" name="SearchId" value="@Model.Filter.SearchId" class="form-control form-control-custom" placeholder="ID...">
+                </div>
+            }
+
+            <!-- Category Filter -->
+            <div class="col-6 col-md-3">
+                <label class="form-label-custom small">Category</label>
+                <select name="CategoryId" class="form-select form-control-custom">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.Id" selected="@(Model.Filter.CategoryId == cat.Id ? "selected" : null)">
+                            @cat.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="col-6 col-md-2">
+                <label class="form-label-custom small">Sort By</label>
+                <select name="SortBy" class="form-select form-control-custom">
+                    <option value="newest" selected="@(Model.Filter.SortBy == "newest" ? "selected" : null)">Newest</option>
+                    <option value="top_selling" selected="@(Model.Filter.SortBy == "top_selling" ? "selected" : null)">Top Rated</option>
+                    <option value="price_asc" selected="@(Model.Filter.SortBy == "price_asc" ? "selected" : null)">Price: Low to High</option>
+                    <option value="price_desc" selected="@(Model.Filter.SortBy == "price_desc" ? "selected" : null)">Price: High to Low</option>
+                </select>
+            </div>
+
+            <!-- Submit & Reset -->
+            <div class="col-md-1 d-flex gap-2">
+                <button type="submit" class="btn btn-gradient w-100" title="Apply Filter">
+                    <i class="bi bi-funnel"></i>
+                </button>
+                <a asp-action="Index" class="btn btn-outline-custom" title="Reset Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Products Grid -->
+    @if (Model.Products.Items.Any())
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
+            @foreach (var product in Model.Products.Items)
+            {
+                <div class="col">
+                    <div class="product-card">
+                        <div class="product-img-wrapper">
+                            <span class="badge-stock @(product.InStock ? "badge-in-stock" : "badge-out-stock")">
+                                @(product.InStock ? $"{product.StockQuantity} in stock" : "Out of stock")
+                            </span>
+                            <a asp-action="Details" asp-route-id="@product.Id">
+                                <img src="@(product.ImageUrl ?? "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60")" 
+                                     alt="@product.Name" 
+                                     loading="lazy">
+                            </a>
+                        </div>
+
+                        <div class="p-3 d-flex flex-column flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge-category">@product.CategoryName</span>
+                                <div class="star-rating">
+                                    <i class="bi bi-star-fill"></i>
+                                    <span class="fw-bold text-dark">@product.AverageRating.ToString("F1")</span>
+                                    <span class="text-muted small">(@product.ReviewCount)</span>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold mb-2">
+                                <a asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none text-truncate d-block" title="@product.Name">
+                                    @product.Name
+                                </a>
+                            </h6>
+
+                            @if (isStaff)
+                            {
+                                <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+                                    <span>ID: #@product.Id</span>
+                                    <span class="badge @(product.IsActive ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")">
+                                        @(product.IsActive ? "Active" : "Hidden")
+                                    </span>
+                                </div>
+                            }
+
+                            <div class="mt-auto pt-2 d-flex justify-content-between align-items-center">
+                                <span class="product-price">$@product.Price.ToString("N2")</span>
+                                <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-gradient">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+                            </div>
+
+                            @if (isStaff)
+                            {
+                                <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                                    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-outline-custom flex-grow-1">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@product.Id" method="post" onsubmit="return confirm('Are you sure you want to delete product \'@product.Name\'?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination Controls -->
+        @if (Model.Products.TotalPages > 1)
+        {
+            int currentPage = Model.Products.PageIndex;
+            int totalPages = Model.Products.TotalPages;
+            int totalCount = Model.Products.TotalCount;
+            int pageSize = Model.Products.PageSize;
+            int startItem = ((currentPage - 1) * pageSize) + 1;
+            int endItem = Math.Min(currentPage * pageSize, totalCount);
+
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing <strong>@startItem–@endItem</strong> of <strong>@totalCount</strong> products • Page <strong>@currentPage</strong> of <strong>@totalPages</strong>
+                </div>
+
+                <nav aria-label="Products pagination">
+                    <ul class="pagination-custom">
+                        <!-- First Page Button -->
+                        <li class="page-item @(Model.Products.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-PageIndex="1"
+                               asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                               asp-route-SearchId="@Model.Filter.SearchId"
+                               asp-route-CategoryId="@Model.Filter.CategoryId"
+                               asp-route-SortBy="@Model.Filter.SortBy"
+                               title="First Page">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Previous Page Button -->
+                        <li class="page-item @(Model.Products.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-PageIndex="@(currentPage - 1)"
+                               asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                               asp-route-SearchId="@Model.Filter.SearchId"
+                               asp-route-CategoryId="@Model.Filter.CategoryId"
+                               asp-route-SortBy="@Model.Filter.SortBy"
+                               title="Previous Page">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Smart Page Window -->
+                        @{
+                            int windowSize = 2;
+                            int startPage = Math.Max(1, currentPage - windowSize);
+                            int endPage = Math.Min(totalPages, currentPage + windowSize);
+
+                            if (startPage > 1)
+                            {
+                                <li class="page-item @(1 == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-PageIndex="1"
+                                       asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                                       asp-route-SearchId="@Model.Filter.SearchId"
+                                       asp-route-CategoryId="@Model.Filter.CategoryId"
+                                       asp-route-SortBy="@Model.Filter.SortBy">1</a>
+                                </li>
+
+                                if (startPage > 2)
+                                {
+                                    <li class="page-ellipsis">•••</li>
+                                }
+                            }
+
+                            for (int p = startPage; p <= endPage; p++)
+                            {
+                                <li class="page-item @(p == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-PageIndex="@p"
+                                       asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                                       asp-route-SearchId="@Model.Filter.SearchId"
+                                       asp-route-CategoryId="@Model.Filter.CategoryId"
+                                       asp-route-SortBy="@Model.Filter.SortBy">@p</a>
+                                </li>
+                            }
+
+                            if (endPage < totalPages)
+                            {
+                                if (endPage < totalPages - 1)
+                                {
+                                    <li class="page-ellipsis">•••</li>
+                                }
+
+                                <li class="page-item @(totalPages == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-PageIndex="@totalPages"
+                                       asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                                       asp-route-SearchId="@Model.Filter.SearchId"
+                                       asp-route-CategoryId="@Model.Filter.CategoryId"
+                                       asp-route-SortBy="@Model.Filter.SortBy">@totalPages</a>
+                                </li>
+                            }
+                        }
+
+                        <!-- Next Page Button -->
+                        <li class="page-item @(Model.Products.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-PageIndex="@(currentPage + 1)"
+                               asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                               asp-route-SearchId="@Model.Filter.SearchId"
+                               asp-route-CategoryId="@Model.Filter.CategoryId"
+                               asp-route-SortBy="@Model.Filter.SortBy"
+                               title="Next Page">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+
+                        <!-- Last Page Button -->
+                        <li class="page-item @(Model.Products.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-PageIndex="@totalPages"
+                               asp-route-SearchTerm="@Model.Filter.SearchTerm"
+                               asp-route-SearchId="@Model.Filter.SearchId"
+                               asp-route-CategoryId="@Model.Filter.CategoryId"
+                               asp-route-SortBy="@Model.Filter.SortBy"
+                               title="Last Page">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="glass-card text-center py-5 my-4">
+            <i class="bi bi-box-seam display-3 text-muted"></i>
+            <h4 class="fw-bold mt-3">No Products Found</h4>
+            <p class="text-muted">We couldn't find any products matching your search or filters.</p>
+            <a asp-action="Index" class="btn btn-gradient mt-2">Clear Filters</a>
+        </div>
+    }
+</div>

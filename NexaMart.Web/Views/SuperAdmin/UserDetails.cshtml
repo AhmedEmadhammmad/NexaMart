@@ -1,0 +1,222 @@
+@model NexaMart.Web.Models.SuperAdminUserDetailsViewModel
+@{
+    ViewData["Title"] = $"Account Audit - {Model.FullName}";
+    Layout = "_AdminLayout";
+}
+
+<div class="mb-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-person-lines-fill text-primary"></i> Account Inspection: @Model.FullName
+            </h2>
+            <p class="text-muted mb-0 small">
+                Complete profile credentials, contact information, role permissions, and full transaction history.
+            </p>
+        </div>
+        <a asp-action="Users" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Back to Accounts Table
+        </a>
+    </div>
+
+    <!-- Top Account Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Profile Credentials -->
+        <div class="col-12 col-lg-5">
+            <div class="admin-card p-4 h-100 bg-white shadow-sm">
+                <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                    <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #1e293b, #3b82f6); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem; font-weight: 700;">
+                        @(string.IsNullOrEmpty(Model.FullName) ? "U" : Model.FullName[0].ToString().ToUpper())
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">@Model.FullName</h4>
+                        <span class="badge bg-secondary font-monospace">User ID: #@Model.Id</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-2 small mb-4">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Email Address:</span>
+                        <span class="fw-semibold text-dark">@Model.Email</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Phone Number:</span>
+                        <span class="fw-semibold text-dark">@(string.IsNullOrEmpty(Model.PhoneNumber) ? "Not Provided" : Model.PhoneNumber)</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Current Role:</span>
+                        @if (Model.RoleType == NexaMart.Domain.Enums.UserRoleType.SuperAdmin)
+                        {
+                            <span class="badge badge-role-superadmin px-2 py-1">SuperAdmin</span>
+                        }
+                        else if (Model.RoleType == NexaMart.Domain.Enums.UserRoleType.Admin)
+                        {
+                            <span class="badge badge-role-admin px-2 py-1">Admin</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-role-customer px-2 py-1">Customer</span>
+                        }
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Account Status:</span>
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge badge-status-active">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-status-blocked">Blocked / Deactivated</span>
+                        }
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Member Since:</span>
+                        <span class="text-dark">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Last Login:</span>
+                        <span class="text-dark">@(Model.LastLoginAt.HasValue ? Model.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never")</span>
+                    </div>
+                </div>
+
+                <!-- Fast Actions -->
+                <div class="pt-3 border-top d-flex gap-2 flex-wrap">
+                    <!-- Promote Form -->
+                    <div class="dropdown flex-grow-1">
+                        <button class="btn btn-sm btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-patch-check me-1"></i> Change Role
+                        </button>
+                        <ul class="dropdown-menu shadow-sm">
+                            @foreach (NexaMart.Domain.Enums.UserRoleType roleOption in Enum.GetValues(typeof(NexaMart.Domain.Enums.UserRoleType)))
+                            {
+                                if (roleOption != Model.RoleType)
+                                {
+                                    <li>
+                                        <form asp-action="PromoteRole" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userId" value="@Model.Id" />
+                                            <input type="hidden" name="newRole" value="@roleOption" />
+                                            <button type="submit" class="dropdown-item small py-1" onclick="return confirm('Promote @Model.FullName to @roleOption?');">
+                                                Set as @roleOption
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- Toggle Status -->
+                    <form asp-action="ToggleUserStatus" method="post" class="flex-grow-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-sm @(Model.IsActive ? "btn-outline-warning" : "btn-outline-success") w-100"
+                                onclick="return confirm('@(Model.IsActive ? "Block" : "Activate") @Model.FullName?');">
+                            <i class="bi @(Model.IsActive ? "bi-lock" : "bi-unlock") me-1"></i>
+                            @(Model.IsActive ? "Block Account" : "Activate Account")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Metrics -->
+        <div class="col-12 col-lg-7">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="admin-card p-3 h-100">
+                        <span class="text-muted small fw-semibold d-block mb-1">TOTAL ORDERS PLACED</span>
+                        <h3 class="fw-bold mb-0 text-primary">@Model.Orders.Count</h3>
+                        <small class="text-muted">Lifetime transactions</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="admin-card p-3 h-100">
+                        <span class="text-muted small fw-semibold d-block mb-1">TOTAL SPENT AMOUNT</span>
+                        <h3 class="fw-bold mb-0 text-success">@Model.TotalSpent.ToString("C")</h3>
+                        <small class="text-muted">Excluding cancelled orders</small>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="admin-card p-3">
+                        <span class="text-muted small fw-semibold d-block mb-1">AVERAGE BASKET VALUE</span>
+                        <h4 class="fw-bold mb-0 text-dark">
+                            @((Model.Orders.Count > 0 ? (Model.TotalSpent / Model.Orders.Count) : 0m).ToString("C"))
+                        </h4>
+                        <small class="text-muted">Average spend per invoice</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Orders History Table -->
+    <div class="admin-table-container">
+        <div class="p-3 bg-light border-bottom">
+            <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-receipt text-success"></i> Customer Purchase History (@Model.Orders.Count Orders)
+            </h5>
+            <small class="text-muted">Itemized audit of all invoices issued to this account.</small>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table admin-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Order Number</th>
+                        <th>Date & Time</th>
+                        <th>Items Count</th>
+                        <th>Subtotal</th>
+                        <th>Total Amount</th>
+                        <th>Fulfillment Status</th>
+                        <th class="text-end">Official Tax Invoice</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Orders.Any())
+                    {
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-dark font-monospace">@order.OrderNumber</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-secondary border">@order.OrderItems.Count Items</span>
+                                </td>
+                                <td>
+                                    <span>@order.SubTotal.ToString("C")</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success fs-6">@order.TotalAmount.ToString("C")</span>
+                                </td>
+                                <td>
+                                    <span class="badge @(order.Status == NexaMart.Domain.Enums.OrderStatus.Delivered ? "bg-success" : order.Status == NexaMart.Domain.Enums.OrderStatus.Cancelled ? "bg-danger" : "bg-primary")">
+                                        @order.Status
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Orders" asp-action="Invoice" asp-route-id="@order.Id" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-printer me-1"></i> Print Tax Invoice
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-bag-x fs-3 d-block mb-1"></i> This account has not placed any orders yet.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,119 @@
+@model IReadOnlyList<NexaMart.Web.Models.OrderDetailsViewModel>
+@{
+    ViewData["Title"] = "My Order History";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active">My Orders & Invoices</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1 rounded-pill mb-1">
+                <i class="bi bi-clock-history"></i> Account Purchases
+            </span>
+            <h2 class="fw-bold mb-0">My Orders & Invoices</h2>
+            <p class="text-muted small mb-0">Track delivery status, review purchases, and download official invoices</p>
+        </div>
+
+        <a asp-controller="Products" asp-action="Index" class="btn btn-gradient">
+            <i class="bi bi-bag"></i> Browse Products
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="d-flex flex-column gap-4 mb-5">
+            @foreach (var order in Model)
+            {
+                <div class="glass-card p-4">
+                    <!-- Order Card Header -->
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 pb-3 mb-3 border-bottom">
+                        <div>
+                            <span class="text-muted small">Order Reference:</span>
+                            <span class="fw-bold fs-5 text-dark ms-1">#@order.OrderNumber</span>
+                            <div class="text-muted small">Placed on @order.OrderDate.ToString("MMMM dd, yyyy • hh:mm tt")</div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            @{
+                                string badgeClass = order.Status switch
+                                {
+                                    NexaMart.Domain.Enums.OrderStatus.Confirmed => "bg-primary-subtle text-primary border-primary",
+                                    NexaMart.Domain.Enums.OrderStatus.Processing => "bg-warning-subtle text-warning border-warning",
+                                    NexaMart.Domain.Enums.OrderStatus.Shipped => "bg-info-subtle text-info border-info",
+                                    NexaMart.Domain.Enums.OrderStatus.Delivered => "bg-success-subtle text-success border-success",
+                                    NexaMart.Domain.Enums.OrderStatus.Cancelled => "bg-danger-subtle text-danger border-danger",
+                                    _ => "bg-secondary-subtle text-secondary border-secondary"
+                                };
+                            }
+                            <span class="badge @badgeClass border px-3 py-1 fw-bold rounded-pill">
+                                @order.Status
+                            </span>
+                            <a asp-action="Invoice" asp-route-id="@order.Id" class="btn btn-sm btn-gradient">
+                                <i class="bi bi-receipt"></i> Full Invoice
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Items Preview Grid -->
+                    <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
+                        @foreach (var item in order.OrderItems.Take(4))
+                        {
+                            <div class="col">
+                                <div class="d-flex align-items-center gap-3 p-2 border rounded-3 bg-white">
+                                    <img src="@(item.ProductImageUrl ?? "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100")" 
+                                         alt="@item.ProductName" 
+                                         class="rounded-2 flex-shrink-0" 
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                    <div class="text-truncate flex-grow-1">
+                                        <div class="fw-semibold text-truncate small">@item.ProductName</div>
+                                        <span class="text-muted small">@item.Quantity × $@item.UnitPrice.ToString("N2")</span>
+                                    </div>
+                                    <span class="fw-bold small text-dark">$@item.TotalPrice.ToString("N2")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (order.OrderItems.Count > 4)
+                    {
+                        <div class="text-muted small mb-3">+ @(order.OrderItems.Count - 4) more items in this order...</div>
+                    }
+
+                    <!-- Footer Details -->
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top small text-muted">
+                        <div>
+                            <span>Total Items: <strong>@order.TotalItemsCount</strong></span>
+                        </div>
+                        <div>
+                            <span class="fs-6">Grand Total: <strong class="text-primary fs-5">$@order.TotalAmount.ToString("N2")</strong></span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Empty Orders State -->
+        <div class="glass-card text-center py-5 my-5">
+            <div class="mx-auto mb-3" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-receipt text-primary display-4"></i>
+            </div>
+            <h3 class="fw-bold mb-2">No Past Orders Found</h3>
+            <p class="text-muted mx-auto mb-4" style="max-width: 480px;">
+                You haven't completed any purchases with NexaMart yet. Check out our store and get your first order delivered directly to your doorstep.
+            </p>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-gradient btn-lg">
+                <i class="bi bi-bag"></i> Start Shopping Now
+            </a>
+        </div>
+    }
+</div>

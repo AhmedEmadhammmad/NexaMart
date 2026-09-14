@@ -1,0 +1,83 @@
+@model NexaMart.Web.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Create Customer Account";
+}
+
+<div class="auth-wrapper">
+    <div class="auth-card" style="max-width: 500px;">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="brand-logo-icon mx-auto mb-3" style="width: 52px; height: 52px; border-radius: 14px;">
+                <i class="bi bi-person-plus-fill fs-3"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Create an Account</h3>
+            <p class="text-muted small">Join thousands of customers enjoying premium shopping on NexaMart</p>
+        </div>
+
+        <form asp-action="Register" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 rounded-3 small"></div>
+
+            <div class="mb-3">
+                <label asp-for="FullName" class="form-label-custom"></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                        <i class="bi bi-person text-muted"></i>
+                    </span>
+                    <input asp-for="FullName" class="form-control form-control-custom border-start-0" placeholder="John Doe" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" autofocus />
+                </div>
+                <span asp-validation-for="FullName" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label-custom"></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                        <i class="bi bi-envelope text-muted"></i>
+                    </span>
+                    <input asp-for="Email" class="form-control form-control-custom border-start-0" placeholder="name@example.com" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                </div>
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="PhoneNumber" class="form-label-custom"></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                        <i class="bi bi-telephone text-muted"></i>
+                    </span>
+                    <input asp-for="PhoneNumber" class="form-control form-control-custom border-start-0" placeholder="+1 (555) 000-0000" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                </div>
+                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <label asp-for="Password" class="form-label-custom"></label>
+                    <input asp-for="Password" class="form-control form-control-custom" placeholder="••••••••" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="ConfirmPassword" class="form-label-custom"></label>
+                    <input asp-for="ConfirmPassword" class="form-control form-control-custom" placeholder="••••••••" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-gradient w-100 py-2 mb-3 fs-6">
+                <i class="bi bi-check-circle"></i> Create Customer Account
+            </button>
+
+            <div class="text-center pt-3 border-top">
+                <p class="text-muted small mb-0">
+                    Already have an account? 
+                    <a asp-action="Login" class="text-primary fw-semibold text-decoration-none">Sign In</a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

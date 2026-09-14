@@ -1,0 +1,229 @@
+@model NexaMart.Web.Models.SuperAdminDashboardViewModel
+@{
+    ViewData["Title"] = "SuperAdmin Executive Command";
+    Layout = "_AdminLayout";
+}
+
+<div class="mb-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-danger"></i> SuperAdmin Central Overview
+            </h2>
+            <p class="text-muted mb-0 small">
+                Master system authority: user account governance, role hierarchy management, and overall platform health.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="CreateAdmin" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-person-plus-fill"></i> Provision Admin Account
+            </a>
+            <a asp-action="Users" class="btn btn-outline-dark d-flex align-items-center gap-1">
+                <i class="bi bi-people"></i> Manage All Accounts
+            </a>
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-boxes"></i> Store Catalog
+            </a>
+        </div>
+    </div>
+
+    <!-- User Governance KPIs Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="admin-card p-3 h-100 border-start border-4 border-primary">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small fw-semibold">REGISTERED USERS</span>
+                    <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-people fs-5"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1">@Model.TotalUsers</h3>
+                <div class="small text-muted">
+                    <span>@Model.TotalCustomers Customers &bull; @Model.TotalAdmins Staff</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="admin-card p-3 h-100 border-start border-4 border-info">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small fw-semibold">ADMINISTRATORS</span>
+                    <div class="p-2 rounded-3 bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-shield-shaded fs-5"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-info">@Model.TotalAdmins</h3>
+                <div class="small text-muted">
+                    <span>@Model.TotalSuperAdmins SuperAdmins with master authority</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="admin-card p-3 h-100 border-start border-4 border-danger">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small fw-semibold">BLOCKED / INACTIVE</span>
+                    <div class="p-2 rounded-3 bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-person-x fs-5"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-danger">@Model.BlockedUsersCount</h3>
+                <div class="small text-muted">
+                    <span>Accounts restricted from login</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="admin-card p-3 h-100 border-start border-4 border-success">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small fw-semibold">GLOBAL STORE REVENUE</span>
+                    <div class="p-2 rounded-3 bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-graph-up-arrow fs-5"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-success">@Model.TotalRevenue.ToString("C")</h3>
+                <div class="small text-muted">
+                    <span>@Model.TotalOrders completed orders</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick ID & User Search Strip -->
+    <div class="admin-card p-3 mb-4 bg-white shadow-sm">
+        <form asp-action="Users" method="get" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <span class="badge bg-dark px-2 py-1"><i class="bi bi-search me-1"></i> User Lookup</span>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-hash"></i></span>
+                    <input type="number" name="searchId" class="form-control" placeholder="User ID # (e.g. 1)" min="1" />
+                </div>
+            </div>
+            <div class="col-12 col-md-5">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                    <input type="text" name="searchTerm" class="form-control" placeholder="Search by name, email, or phone..." />
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+                    <i class="bi bi-search"></i> Search Users
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 1. RECENT REGISTERED USERS (TABULAR DATA) -->
+    <div class="admin-table-container mb-4">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill text-primary"></i> Recently Registered Accounts
+                </h5>
+                <small class="text-muted">Displaying latest accounts across all tiers (Customer, Admin, SuperAdmin).</small>
+            </div>
+            <a asp-action="Users" class="btn btn-sm btn-primary">
+                Open Full Users Table (@Model.TotalUsers)
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table admin-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>User Account</th>
+                        <th>Phone</th>
+                        <th>Assigned Role</th>
+                        <th>Status</th>
+                        <th>Registered Date</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                        <th class="text-end" style="width: 190px;">Governance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.RecentRegisteredUsers != null && Model.RecentRegisteredUsers.Any())
+                    {
+                        @foreach (var user in Model.RecentRegisteredUsers)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary font-monospace">#@user.Id</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@user.FullName</div>
+                                    <small class="text-muted">@user.Email</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@(string.IsNullOrEmpty(user.PhoneNumber) ? "—" : user.PhoneNumber)</small>
+                                </td>
+                                <td>
+                                    @if (user.RoleType == NexaMart.Domain.Enums.UserRoleType.SuperAdmin)
+                                    {
+                                        <span class="badge badge-role-superadmin px-2 py-1">SuperAdmin</span>
+                                    }
+                                    else if (user.RoleType == NexaMart.Domain.Enums.UserRoleType.Admin)
+                                    {
+                                        <span class="badge badge-role-admin px-2 py-1">Admin</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-role-customer px-2 py-1">Customer</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge badge-status-active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-status-blocked">Blocked</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">@user.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@user.OrdersCount</span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-success">@user.TotalSpent.ToString("C")</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="UserDetails" asp-route-id="@user.Id" class="btn btn-outline-primary" title="View Full Details">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+
+                                        <!-- Toggle Status Form -->
+                                        <form asp-action="ToggleUserStatus" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userId" value="@user.Id" />
+                                            <button type="submit" class="btn @(user.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(user.IsActive ? "Block Account" : "Activate Account")">
+                                                <i class="bi @(user.IsActive ? "bi-lock" : "bi-unlock")"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                No registered users found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,207 @@
+@model NexaMart.Web.Models.AdminOrderListViewModel
+@{
+    ViewData["Title"] = "Store Orders Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="mb-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-receipt-cutoff text-success"></i> Customer Orders & Fulfillment
+            </h2>
+            <p class="text-muted mb-0 small">
+                Track all incoming store orders, print tax invoices, and update shipping fulfillment status.
+            </p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Dashboard Hub
+        </a>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="admin-card p-3 mb-4 bg-white shadow-sm">
+        <form method="get" asp-action="Orders" class="row g-2 align-items-end">
+            <!-- Search by Order ID -->
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-semibold text-muted mb-1">Order ID #</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-hash"></i></span>
+                    <input type="number" name="searchId" value="@Model.SearchId" class="form-control form-control-sm" placeholder="Order ID" min="1" />
+                </div>
+            </div>
+
+            <!-- Search by Order Number / Customer Email -->
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Order # or Customer</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control form-control-sm" placeholder="ORD-... or customer email" />
+                </div>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="col-6 col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Order Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Order Statuses</option>
+                    @foreach (NexaMart.Domain.Enums.OrderStatus s in Enum.GetValues(typeof(NexaMart.Domain.Enums.OrderStatus)))
+                    {
+                        <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-dark flex-grow-1">
+                    <i class="bi bi-funnel"></i> Apply Filter
+                </button>
+                <a asp-action="Orders" class="btn btn-sm btn-outline-secondary">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Orders Data Table -->
+    <div class="admin-table-container mb-4">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark">
+                Showing @Model.Orders.Items.Count of @Model.Orders.TotalCount Orders
+            </span>
+            <span class="badge bg-secondary">
+                Page @Model.Orders.PageIndex of @Model.Orders.TotalPages
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table admin-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Order Number</th>
+                        <th>Customer</th>
+                        <th>Items Count</th>
+                        <th>Total Amount</th>
+                        <th>Order Date</th>
+                        <th>Status</th>
+                        <th class="text-end" style="width: 220px;">Fulfillment & Invoice</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Orders.Items.Any())
+                    {
+                        @foreach (var order in Model.Orders.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary font-monospace">#@order.Id</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark font-monospace">@order.OrderNumber</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@order.CustomerName</div>
+                                    <small class="text-muted">@order.CustomerEmail</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-secondary border">@order.ItemsCount Items</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success fs-6">@order.TotalAmount.ToString("C")</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</small>
+                                </td>
+                                <td>
+                                    <span class="badge @(order.Status == NexaMart.Domain.Enums.OrderStatus.Delivered ? "bg-success" : order.Status == NexaMart.Domain.Enums.OrderStatus.Cancelled ? "bg-danger" : "bg-primary")">
+                                        @order.Status
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end align-items-center gap-1">
+                                        <a asp-controller="Orders" asp-action="Invoice" asp-route-id="@order.Id" target="_blank" class="btn btn-sm btn-outline-primary" title="Print Tax Invoice">
+                                            <i class="bi bi-printer"></i> Invoice
+                                        </a>
+
+                                        <!-- Update Status Dropdown Form -->
+                                        <div class="dropdown d-inline">
+                                            <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Status
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                @foreach (NexaMart.Domain.Enums.OrderStatus newStatus in Enum.GetValues(typeof(NexaMart.Domain.Enums.OrderStatus)))
+                                                {
+                                                    if (newStatus != order.Status)
+                                                    {
+                                                        <li>
+                                                            <form asp-action="UpdateOrderStatus" method="post">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="orderId" value="@order.Id" />
+                                                                <input type="hidden" name="status" value="@newStatus" />
+                                                                <button type="submit" class="dropdown-item small py-1">
+                                                                    Mark as @newStatus
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-receipt fs-2 d-block mb-2"></i>
+                                No orders match your query.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.Orders.TotalPages > 1)
+        {
+            <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                <span class="small text-muted">
+                    Page @Model.Orders.PageIndex of @Model.Orders.TotalPages
+                </span>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(!Model.Orders.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Orders" 
+                           asp-route-page="@(Model.Orders.PageIndex - 1)" 
+                           asp-route-searchId="@Model.SearchId"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-status="@Model.StatusFilter">&laquo; Prev</a>
+                    </li>
+                    @for (int p = 1; p <= Model.Orders.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Orders.PageIndex ? "active" : "")">
+                            <a class="page-link" asp-action="Orders" 
+                               asp-route-page="@p" 
+                               asp-route-searchId="@Model.SearchId"
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-status="@Model.StatusFilter">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.Orders.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="Orders" 
+                           asp-route-page="@(Model.Orders.PageIndex + 1)" 
+                           asp-route-searchId="@Model.SearchId"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-status="@Model.StatusFilter">Next &raquo;</a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>
