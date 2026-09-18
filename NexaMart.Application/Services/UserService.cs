@@ -198,7 +198,22 @@ public class UserService : IUserService
         UserRoleType roleType,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(fullName) || fullName.Trim().Length < 3 || fullName.Trim().Length > 100)
+        {
+            throw new ArgumentException("Full Name must be between 3 and 100 characters.");
+        }
+
         var normalizedEmail = email.Trim().ToLowerInvariant();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(normalizedEmail, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+        {
+            throw new ArgumentException("The provided email address format is invalid.");
+        }
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-])[A-Za-z\d@$!%*?&#._-]{8,}$"))
+        {
+            throw new ArgumentException("Password must contain at least 8 characters, including 1 uppercase, 1 lowercase, 1 number, and 1 special character.");
+        }
+
         var exists = await _unitOfWork.Users.Query().AnyAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
         if (exists)
         {

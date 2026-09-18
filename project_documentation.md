@@ -602,6 +602,8 @@ catch
 | 14 | **لوحة تحكم وحوكمة SuperAdmin** | مكتملة 100% | `SuperAdminController`, `SuperAdminService` | تحكم كامل بالحسابات، ترقية الرتب، وحظر وتفعيل المستخدمين مع حماية المشرف لنفسه. |
 | 15 | **السلة والمفضلة وإصدار الفاتورة** | مكتملة 100% | `CartController`, `WishlistController`, `OrderService` | إدارة كاملة مع زر مباشر لإصدار الفاتورة الضريبية وخصم المخزون ذرّياً دون خطوات دفع وهمية. |
 | 16 | **معمارية Controllers فائقة الرشاقة** | مكتملة 100% | كافة وحدات التحكم والخدمات | حصر أدوار الـ Controllers في 1-5 أسطر لكل Action، وعزل كافة القواعد داخل الـ Services. |
+| 17 | **رفع الصور الآمن بالـ Drag & Drop وفحص الـ Magic Bytes** | مكتملة 100% | `FileStorageService.cs`, `ProductForm.cshtml`, `CategoryForm.cshtml`, `AdminController.cs` | نقل الخدمة لـ `Application/Services`، إزالة حقول روابط الصور النصية بالكامل، فحص التوقيع الثنائي (Magic Bytes)، حفظ الملفات بأسماء عشوائية معزولة وحذف الصور القديمة تلقائياً. |
+| 18 | **تعزيز وتأمين التحقق من المدخلات (Input Validation & Anti-XSS)** | مكتملة 100% | `AccountViewModels.cs`, `ProductViewModels.cs`, `CategoryViewModels.cs`, `ReviewViewModels.cs`, `AuthService.cs` | تطبيق Strict RFC Email Regex، سياسة كلمات مرور صارمة وقائمة سوداء لكلمات السر الشائعة، ومنع حقن وسوم HTML/XSS في أوامر وأوصاف المنتجات والأقسام والتقييمات. |
 
 ---
 

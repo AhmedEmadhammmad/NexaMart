@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<ISuperAdminService, SuperAdminService>();
+        services.AddScoped<IFileStorageService, FileStorageService>();
 
         return services;
     }

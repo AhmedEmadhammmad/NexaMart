@@ -21,7 +21,7 @@
         </div>
 
         <div class="admin-card p-4 bg-white shadow-sm">
-            <form asp-action="@(isEdit ? "EditProduct" : "CreateProduct")" asp-route-id="@(isEdit ? Model.Id : null)" method="post">
+            <form asp-action="@(isEdit ? "EditProduct" : "CreateProduct")" asp-route-id="@(isEdit ? Model.Id : null)" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="Id" />
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 small"></div>
@@ -68,14 +68,34 @@
                         </div>
                     </div>
 
-                    <!-- Image URL -->
+                    <!-- Product Image Drag & Drop Area -->
                     <div class="col-12">
-                        <label asp-for="ImageUrl" class="form-label small fw-bold text-dark"></label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-image"></i></span>
-                            <input asp-for="ImageUrl" class="form-control" placeholder="https://images.unsplash.com/..." />
+                        <label class="form-label small fw-bold text-dark">Product Image</label>
+                        <div id="productDropZone" class="border border-2 border-dashed rounded-3 p-4 text-center bg-light position-relative" style="transition: all 0.2s ease; cursor: pointer;">
+                            <input type="file" asp-for="ImageFile" id="productImageInput" class="d-none" accept=".jpg,.jpeg,.png,.webp" />
+                            
+                            <!-- Prompt State -->
+                            <div id="productDropPrompt" class="@(string.IsNullOrEmpty(Model.ImageUrl) ? "" : "d-none") py-3">
+                                <i class="bi bi-cloud-arrow-up text-primary display-5 d-block mb-2"></i>
+                                <h6 class="fw-bold mb-1">Drag &amp; drop product image here, or <span class="text-primary text-decoration-underline" id="productBrowseLink">Browse</span></h6>
+                                <p class="text-muted small mb-0">Supported formats: JPG, PNG, WebP (Max size: 5 MB)</p>
+                            </div>
+
+                            <!-- Preview State -->
+                            <div id="productPreviewContainer" class="@(string.IsNullOrEmpty(Model.ImageUrl) ? "d-none" : "") position-relative d-inline-block text-center">
+                                <img id="productImagePreview" src="@(Model.ImageUrl ?? "")" alt="Product Image Preview" class="img-thumbnail rounded-3 shadow-sm" style="max-height: 200px; max-width: 100%; object-fit: contain;" />
+                                <div class="mt-2">
+                                    <button type="button" id="changeProductImageBtn" class="btn btn-outline-primary btn-sm me-1">
+                                        <i class="bi bi-arrow-repeat"></i> Change Image
+                                    </button>
+                                    <button type="button" id="removeProductImageBtn" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                        <input type="hidden" asp-for="ImageUrl" id="productExistingImageUrl" />
+                        <span asp-validation-for="ImageFile" class="text-danger small d-block mt-1"></span>
                     </div>
 
                     <!-- Description -->
@@ -99,4 +119,98 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const dropZone = document.getElementById("productDropZone");
+            const fileInput = document.getElementById("productImageInput");
+            const browseLink = document.getElementById("productBrowseLink");
+            const dropPrompt = document.getElementById("productDropPrompt");
+            const previewContainer = document.getElementById("productPreviewContainer");
+            const imagePreview = document.getElementById("productImagePreview");
+            const removeBtn = document.getElementById("removeProductImageBtn");
+            const changeBtn = document.getElementById("changeProductImageBtn");
+            const existingUrlInput = document.getElementById("productExistingImageUrl");
+
+            function triggerBrowse(e) {
+                if (e) e.stopPropagation();
+                fileInput.click();
+            }
+
+            if (browseLink) browseLink.addEventListener("click", triggerBrowse);
+            if (changeBtn) changeBtn.addEventListener("click", triggerBrowse);
+
+            dropZone.addEventListener("click", function (e) {
+                if (e.target !== removeBtn && e.target !== changeBtn && !removeBtn.contains(e.target)) {
+                    if (previewContainer.classList.contains("d-none")) {
+                        triggerBrowse();
+                    }
+                }
+            });
+
+            // Drag and Drop highlights
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add("border-primary", "bg-white", "shadow-sm");
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove("border-primary", "bg-white", "shadow-sm");
+                });
+            });
+
+            dropZone.addEventListener("drop", function (e) {
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    validateAndApplyFile(files[0]);
+                }
+            });
+
+            fileInput.addEventListener("change", function (e) {
+                if (e.target.files && e.target.files.length > 0) {
+                    validateAndApplyFile(e.target.files[0]);
+                }
+            });
+
+            function validateAndApplyFile(file) {
+                const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+                const fileName = file.name.toLowerCase();
+                const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+                if (!hasValidExtension) {
+                    alert("Invalid file type. Only JPG, PNG, and WebP images are permitted.");
+                    fileInput.value = "";
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    alert("Image size exceeds the maximum limit of 5 MB.");
+                    fileInput.value = "";
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    imagePreview.src = event.target.result;
+                    previewContainer.classList.remove("d-none");
+                    dropPrompt.classList.add("d-none");
+                };
+                reader.readAsDataURL(file);
+            }
+
+            removeBtn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                fileInput.value = "";
+                imagePreview.src = "";
+                existingUrlInput.value = "";
+                previewContainer.classList.add("d-none");
+                dropPrompt.classList.remove("d-none");
+            });
+        });
+    </script>
 }

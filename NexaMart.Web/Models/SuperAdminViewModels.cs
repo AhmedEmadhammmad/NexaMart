@@ -89,15 +89,17 @@ public class CreateAdminAccountViewModel
 {
     [Required(ErrorMessage = "Full Name is required.")]
     [StringLength(100, MinimumLength = 3, ErrorMessage = "Full Name must be between 3 and 100 characters.")]
+    [RegularExpression(@"^[a-zA-Z\u0600-\u06FF\s.'-]+$", ErrorMessage = "Full Name can only contain letters, spaces, hyphens, and apostrophes.")]
     [Display(Name = "Full Name")]
     public string FullName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Email is required.")]
-    [EmailAddress(ErrorMessage = "Invalid email address.")]
+    [MaxLength(150, ErrorMessage = "Email cannot exceed 150 characters.")]
+    [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = "Please enter a valid email address with a valid domain (e.g. user@domain.com).")]
     [Display(Name = "Email Address")]
     public string Email { get; set; } = string.Empty;
 
-    [Phone(ErrorMessage = "Invalid phone number.")]
+    [RegularExpression(@"^\+?[0-9\s\-()]{7,20}$", ErrorMessage = "Please enter a valid phone number (7 to 20 digits).")]
     [Display(Name = "Phone Number")]
     public string? PhoneNumber { get; set; }
 
@@ -106,7 +108,9 @@ public class CreateAdminAccountViewModel
     public UserRoleType RoleType { get; set; } = UserRoleType.Admin;
 
     [Required(ErrorMessage = "Password is required.")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters long.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-])[A-Za-z\d@$!%*?&#._-]{8,}$", 
+        ErrorMessage = "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character (@$!%*?&#._-).")]
     [DataType(DataType.Password)]
     [Display(Name = "Password")]
     public string Password { get; set; } = string.Empty;

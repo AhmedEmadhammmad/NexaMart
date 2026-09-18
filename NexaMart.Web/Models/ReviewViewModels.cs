@@ -25,6 +25,7 @@ public class AddReviewViewModel
     public int Rating { get; set; } = 5;
 
     [StringLength(1000, ErrorMessage = "Comment cannot exceed 1000 characters.")]
+    [RegularExpression(@"^[^<>{}]*$", ErrorMessage = "Comment cannot contain HTML or script tags.")]
     [Display(Name = "Your Review")]
     public string? Comment { get; set; }
 }

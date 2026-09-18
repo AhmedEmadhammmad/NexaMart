@@ -3,8 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NexaMart.Application.Interfaces.Repositories;
 using NexaMart.Application.Interfaces.Security;
-using NexaMart.Application.Interfaces.Services;
-using NexaMart.Application.Services;
 using NexaMart.Infrastructure.Data.Context;
 using NexaMart.Infrastructure.Repositories;
 using NexaMart.Infrastructure.Security;

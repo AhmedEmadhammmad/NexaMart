@@ -27,14 +27,24 @@ public class CategoryFormViewModel
 
     [Required(ErrorMessage = "Category name is required.")]
     [StringLength(100, MinimumLength = 2, ErrorMessage = "Category name must be between 2 and 100 characters.")]
+    [RegularExpression(@"^[^<>\/\\\{\}\[\]]*$", ErrorMessage = "Category name cannot contain script tags or special code characters.")]
     [Display(Name = "Category Name")]
     public string Name { get; set; } = string.Empty;
 
+    [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+    [RegularExpression(@"^[^<>{}]*$", ErrorMessage = "Description cannot contain script tags or braces.")]
     [Display(Name = "Description")]
     public string? Description { get; set; }
 
-    [Url(ErrorMessage = "Please enter a valid image URL.")]
-    [Display(Name = "Image URL")]
+    /// <summary>
+    /// File uploaded via Drag & Drop or file chooser.
+    /// </summary>
+    [Display(Name = "Category Image")]
+    public IFormFile? ImageFile { get; set; }
+
+    /// <summary>
+    /// Preserved relative image URL when editing or after upload.
+    /// </summary>
     public string? ImageUrl { get; set; }
 
     [Display(Name = "Display Order")]

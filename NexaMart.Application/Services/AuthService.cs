@@ -27,12 +27,30 @@ public class AuthService : IAuthService
         _jwtTokenService = jwtTokenService;
     }
 
+    private static readonly HashSet<string> CommonWeakPasswords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "password", "12345678", "qwertyuiop", "admin123", "password123", "welcome123", "nexamart123", "123456789", "iloveyou", "admin@123"
+    };
+
+    private static readonly System.Text.RegularExpressions.Regex StrictEmailRegex = new(
+        @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+        System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static readonly System.Text.RegularExpressions.Regex StrongPasswordRegex = new(
+        @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-])[A-Za-z\d@$!%*?&#._-]{8,}$",
+        System.Text.RegularExpressions.RegexOptions.Compiled);
+
     public async Task<(string Token, string RefreshToken, DateTime ExpiresAt, ApplicationUser User)> LoginAsync(
         string identifier,
         string password,
         bool rememberMe = false,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(identifier) || identifier.Length > 150 || string.IsNullOrWhiteSpace(password))
+        {
+            throw new UnauthorizedAccessException("Invalid identifier or credentials.");
+        }
+
         var trimmedIdentifier = identifier.Trim();
         ApplicationUser? user = null;
 
@@ -98,7 +116,32 @@ public class AuthService : IAuthService
         string? phoneNumber = null,
         CancellationToken cancellationToken = default)
     {
-        var normalizedEmail = email.Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(fullName) || fullName.Trim().Length < 3 || fullName.Trim().Length > 100)
+        {
+            throw new ArgumentException("Full Name must be between 3 and 100 characters.");
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        if (!StrictEmailRegex.IsMatch(normalizedEmail))
+        {
+            throw new ArgumentException("The provided email address format is invalid.");
+        }
+
+        if (!StrongPasswordRegex.IsMatch(password))
+        {
+            throw new ArgumentException("Password must contain at least 8 characters, including 1 uppercase, 1 lowercase, 1 number, and 1 special symbol.");
+        }
+
+        if (CommonWeakPasswords.Contains(password))
+        {
+            throw new ArgumentException("This password is too common and vulnerable to brute-force attacks. Please choose a more complex password.");
+        }
+
+        var emailPrefix = normalizedEmail.Split('@')[0];
+        if (password.ToLowerInvariant().Contains(emailPrefix) || password.ToLowerInvariant().Contains(fullName.Trim().ToLowerInvariant()))
+        {
+            throw new ArgumentException("Password must not contain parts of your name or email address.");
+        }
 
         // Check for existing account
         var exists = await _unitOfWork.Users.Query()

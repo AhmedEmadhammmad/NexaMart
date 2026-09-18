@@ -18,10 +18,12 @@ namespace NexaMart.Web.Controllers;
 public class AdminController : Controller
 {
     private readonly IAdminService _adminService;
+    private readonly IFileStorageService _fileStorageService;
 
-    public AdminController(IAdminService adminService)
+    public AdminController(IAdminService adminService, IFileStorageService fileStorageService)
     {
         _adminService = adminService;
+        _fileStorageService = fileStorageService;
     }
 
     // =========================================================================
@@ -40,11 +42,12 @@ public class AdminController : Controller
     // =========================================================================
 
     [HttpGet]
+    [ActionName("SearchById")]
     public async Task<IActionResult> SearchById(int? id, string? type, CancellationToken cancellationToken)
     {
         if (!id.HasValue || id.Value <= 0)
         {
-            TempData["ErrorMessage"] = "Please provide a valid numeric ID to search.";
+            TempData["ErrorMessage"] = "Please enter a valid numeric ID to search.";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -85,6 +88,19 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateProduct(ProductFormViewModel model, CancellationToken cancellationToken)
     {
+        if (model.ImageFile != null && model.ImageFile.Length > 0)
+        {
+            try
+            {
+                using var stream = model.ImageFile.OpenReadStream();
+                model.ImageUrl = await _fileStorageService.SaveImageAsync(stream, model.ImageFile.FileName, "products", cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(nameof(model.ImageFile), ex.Message);
+            }
+        }
+
         if (!ModelState.IsValid)
         {
             model.CategoriesList = await GetCategorySelectListAsync(cancellationToken, model.CategoryId);
@@ -114,6 +130,23 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditProduct(int id, ProductFormViewModel model, CancellationToken cancellationToken)
     {
+        string? oldImageUrl = null;
+        if (model.ImageFile != null && model.ImageFile.Length > 0)
+        {
+            try
+            {
+                var existingProduct = await _adminService.GetProductByIdAsync(id, cancellationToken);
+                oldImageUrl = existingProduct?.ImageUrl;
+
+                using var stream = model.ImageFile.OpenReadStream();
+                model.ImageUrl = await _fileStorageService.SaveImageAsync(stream, model.ImageFile.FileName, "products", cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(nameof(model.ImageFile), ex.Message);
+            }
+        }
+
         if (!ModelState.IsValid)
         {
             model.CategoriesList = await GetCategorySelectListAsync(cancellationToken, model.CategoryId);
@@ -121,6 +154,12 @@ public class AdminController : Controller
         }
 
         await _adminService.UpdateProductAsync(id, model.ToEntity(), cancellationToken);
+
+        if (!string.IsNullOrEmpty(oldImageUrl) && oldImageUrl != model.ImageUrl)
+        {
+            await _fileStorageService.DeleteImageAsync(oldImageUrl);
+        }
+
         TempData["SuccessMessage"] = $"Product #{id} was updated successfully.";
         return RedirectToAction(nameof(Products));
     }
@@ -138,9 +177,16 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
     {
+        var product = await _adminService.GetProductByIdAsync(id, cancellationToken);
+        var imageUrl = product?.ImageUrl;
+
         var deleted = await _adminService.DeleteProductAsync(id, cancellationToken);
         if (deleted)
         {
+            if (!string.IsNullOrEmpty(imageUrl))
+            {
+                await _fileStorageService.DeleteImageAsync(imageUrl);
+            }
             TempData["SuccessMessage"] = $"Product #{id} was permanently removed.";
         }
         else
@@ -164,7 +210,7 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public IActionResult CreateCategory()
+    public async Task<IActionResult> CreateCategory()
     {
         return View("CategoryForm", new CategoryFormViewModel());
     }
@@ -173,6 +219,19 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateCategory(CategoryFormViewModel model, CancellationToken cancellationToken)
     {
+        if (model.ImageFile != null && model.ImageFile.Length > 0)
+        {
+            try
+            {
+                using var stream = model.ImageFile.OpenReadStream();
+                model.ImageUrl = await _fileStorageService.SaveImageAsync(stream, model.ImageFile.FileName, "categories", cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(nameof(model.ImageFile), ex.Message);
+            }
+        }
+
         if (!ModelState.IsValid)
         {
             return View("CategoryForm", model);
@@ -200,12 +259,35 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditCategory(int id, CategoryFormViewModel model, CancellationToken cancellationToken)
     {
+        string? oldImageUrl = null;
+        if (model.ImageFile != null && model.ImageFile.Length > 0)
+        {
+            try
+            {
+                var existingCategory = await _adminService.GetCategoryByIdAsync(id, cancellationToken);
+                oldImageUrl = existingCategory?.ImageUrl;
+
+                using var stream = model.ImageFile.OpenReadStream();
+                model.ImageUrl = await _fileStorageService.SaveImageAsync(stream, model.ImageFile.FileName, "categories", cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(nameof(model.ImageFile), ex.Message);
+            }
+        }
+
         if (!ModelState.IsValid)
         {
             return View("CategoryForm", model);
         }
 
         await _adminService.UpdateCategoryAsync(id, model.ToEntity(), cancellationToken);
+
+        if (!string.IsNullOrEmpty(oldImageUrl) && oldImageUrl != model.ImageUrl)
+        {
+            await _fileStorageService.DeleteImageAsync(oldImageUrl);
+        }
+
         TempData["SuccessMessage"] = $"Category #{id} was updated successfully.";
         return RedirectToAction(nameof(Categories));
     }
@@ -225,9 +307,16 @@ public class AdminController : Controller
     {
         try
         {
+            var category = await _adminService.GetCategoryByIdAsync(id, cancellationToken);
+            var imageUrl = category?.ImageUrl;
+
             var deleted = await _adminService.DeleteCategoryAsync(id, cancellationToken);
             if (deleted)
             {
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    await _fileStorageService.DeleteImageAsync(imageUrl);
+                }
                 TempData["SuccessMessage"] = $"Category #{id} was deleted successfully.";
             }
             else
