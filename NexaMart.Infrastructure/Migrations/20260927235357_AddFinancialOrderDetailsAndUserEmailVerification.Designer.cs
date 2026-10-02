@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexaMart.Infrastructure.Data.Context;
 
@@ -11,9 +12,11 @@ using NexaMart.Infrastructure.Data.Context;
 namespace NexaMart.Infrastructure.Migrations
 {
     [DbContext(typeof(NexaMartDbContext))]
-    partial class NexaMartDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260927235357_AddFinancialOrderDetailsAndUserEmailVerification")]
+    partial class AddFinancialOrderDetailsAndUserEmailVerification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

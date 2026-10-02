@@ -78,7 +78,14 @@ public class AdminOrderListItemViewModel
     public string CustomerEmail { get; set; } = string.Empty;
     public DateTime OrderDate { get; set; }
     public OrderStatus Status { get; set; }
+    public decimal SubTotal { get; set; }
+    public decimal ShippingCost { get; set; }
+    public decimal TaxAmount { get; set; }
     public decimal TotalAmount { get; set; }
+    public string Currency { get; set; } = "EGP";
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.CashOnDelivery;
+    public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
+    public string? TransactionId { get; set; }
     public int ItemsCount { get; set; }
 }
 

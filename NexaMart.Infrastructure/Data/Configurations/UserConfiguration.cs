@@ -33,6 +33,16 @@ public class UserConfiguration : IEntityTypeConfiguration<ApplicationUser>
             .HasConversion<string>()
             .HasMaxLength(50);
 
+        builder.Property(u => u.IsEmailConfirmed)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(u => u.EmailConfirmationOtp)
+            .HasMaxLength(10);
+
+        builder.Property(u => u.PasswordResetOtp)
+            .HasMaxLength(10);
+
         builder.Property(u => u.RefreshToken)
             .HasMaxLength(500);
 

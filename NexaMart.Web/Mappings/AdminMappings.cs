@@ -84,11 +84,18 @@ public static partial class MappingExtensions
         {
             Id = order.Id,
             OrderNumber = order.OrderNumber,
-            CustomerName = order.User?.FullName ?? "Unknown",
-            CustomerEmail = order.User?.Email ?? string.Empty,
+            CustomerName = !string.IsNullOrWhiteSpace(order.CustomerName) ? order.CustomerName : (order.User?.FullName ?? "Unknown"),
+            CustomerEmail = !string.IsNullOrWhiteSpace(order.CustomerEmail) ? order.CustomerEmail : (order.User?.Email ?? string.Empty),
             OrderDate = order.CreatedAt,
             Status = order.Status,
+            SubTotal = order.SubTotal,
+            ShippingCost = order.ShippingCost,
+            TaxAmount = order.TaxAmount,
             TotalAmount = order.TotalAmount,
+            Currency = order.Currency,
+            PaymentMethod = order.PaymentMethod,
+            PaymentStatus = order.PaymentStatus,
+            TransactionId = order.TransactionId,
             ItemsCount = order.OrderItems?.Count ?? 0
         };
     }

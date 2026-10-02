@@ -13,18 +13,41 @@ namespace NexaMart.Application.Services;
 public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
 
-    public OrderService(IUnitOfWork unitOfWork)
+    public OrderService(IUnitOfWork unitOfWork, IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
     }
 
     public async Task<Order> CreateOrderFromCartAsync(int userId, CancellationToken cancellationToken = default)
     {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
+        var request = new CreateOrderRequest
+        {
+            UserId = userId,
+            CustomerName = user?.FullName ?? "Customer",
+            CustomerEmail = user?.Email ?? string.Empty,
+            CustomerPhone = user?.PhoneNumber ?? string.Empty,
+            ShippingAddress = "Default Delivery Address",
+            City = "Cairo",
+            State = "Cairo",
+            PaymentMethod = PaymentMethod.CashOnDelivery,
+            ShippingCost = 0.0m,
+            TaxAmount = 0.0m,
+            DiscountAmount = 0.0m
+        };
+
+        return await CreateOrderFromCartAsync(request, cancellationToken);
+    }
+
+    public async Task<Order> CreateOrderFromCartAsync(CreateOrderRequest request, CancellationToken cancellationToken = default)
+    {
         // 1. Retrieve user's cart items with product details (tracking enabled to mutate inventory)
         var cartItems = await _unitOfWork.CartItems.Query(disableTracking: false)
             .Include(c => c.Product)
-            .Where(c => c.UserId == userId)
+            .Where(c => c.UserId == request.UserId)
             .ToListAsync(cancellationToken);
 
         if (cartItems.Count == 0)
@@ -76,13 +99,34 @@ public class OrderService : IOrderService
                 });
             }
 
+            var shippingCost = request.ShippingCost;
+            var taxAmount = request.TaxAmount;
+            var discountAmount = request.DiscountAmount;
+            var totalAmount = Math.Max(0.0m, subTotal + shippingCost + taxAmount - discountAmount);
+
             var order = new Order
             {
                 OrderNumber = $"NXM-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpperInvariant()}",
-                UserId = userId,
+                UserId = request.UserId,
                 SubTotal = subTotal,
-                TotalAmount = subTotal,
-                Status = OrderStatus.Confirmed,
+                ShippingCost = shippingCost,
+                TaxAmount = taxAmount,
+                DiscountAmount = discountAmount,
+                TotalAmount = totalAmount,
+                Currency = "EGP",
+                PaymentMethod = request.PaymentMethod,
+                PaymentStatus = PaymentStatus.Pending,
+                CustomerName = request.CustomerName,
+                CustomerEmail = request.CustomerEmail,
+                CustomerPhone = request.CustomerPhone,
+                ShippingAddress = request.ShippingAddress,
+                City = request.City,
+                State = request.State,
+                PostalCode = request.PostalCode,
+                OrderNotes = request.OrderNotes,
+                Status = request.PaymentMethod == PaymentMethod.CashOnDelivery 
+                    ? OrderStatus.Confirmed 
+                    : OrderStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null,
                 OrderItems = orderItems
@@ -90,13 +134,21 @@ public class OrderService : IOrderService
 
             await _unitOfWork.Orders.AddAsync(order, cancellationToken);
 
-            // Clear shopping cart items
-            var cartEntities = await _unitOfWork.CartItems.GetAsync(c => c.UserId == userId, cancellationToken);
-            _unitOfWork.CartItems.DeleteRange(cartEntities);
+            // Clear shopping cart items (using the already tracked cartItems in memory)
+            _unitOfWork.CartItems.DeleteRange(cartItems);
 
             await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-            return (await GetOrderByIdAsync(order.Id, cancellationToken))!;
+            var createdOrder = (await GetOrderByIdAsync(order.Id, cancellationToken))!;
+
+            // For CashOnDelivery: Order is instantly confirmed -> send official invoice email immediately.
+            // For Paymob Online payments: Email is deferred until payment is captured and verified.
+            if (request.PaymentMethod == PaymentMethod.CashOnDelivery)
+            {
+                await _emailService.SendOrderConfirmationEmailAsync(createdOrder, cancellationToken);
+            }
+
+            return createdOrder;
         }
         catch
         {
@@ -240,6 +292,14 @@ public class OrderService : IOrderService
 
             _unitOfWork.Orders.Update(order);
             await _unitOfWork.CommitTransactionAsync(cancellationToken);
+
+            // Dispatch cancellation confirmation email to customer
+            var fullCancelledOrder = await GetOrderByIdAsync(orderId, cancellationToken);
+            if (fullCancelledOrder != null)
+            {
+                await _emailService.SendOrderCancellationEmailAsync(fullCancelledOrder, reason, cancellationToken);
+            }
+
             return true;
         }
         catch
@@ -258,5 +318,44 @@ public class OrderService : IOrderService
             : 0.00m;
 
         return (totalOrders, totalRevenue);
+    }
+
+    public async Task<bool> UpdatePaymentStatusAsync(int orderId, PaymentStatus status, string? transactionId = null, CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId, cancellationToken);
+        if (order == null)
+        {
+            return false;
+        }
+
+        var wasAlreadyPaid = order.PaymentStatus == PaymentStatus.Paid;
+        order.PaymentStatus = status;
+
+        if (status == PaymentStatus.Paid)
+        {
+            order.Status = OrderStatus.Confirmed;
+            order.PaidAt = DateTime.UtcNow;
+        }
+
+        if (!string.IsNullOrWhiteSpace(transactionId))
+        {
+            order.TransactionId = transactionId;
+        }
+
+        order.UpdatedAt = DateTime.UtcNow;
+        _unitOfWork.Orders.Update(order);
+        await _unitOfWork.CompleteAsync(cancellationToken);
+
+        // Dispatch official invoice confirmation email when payment is successfully captured
+        if (status == PaymentStatus.Paid && !wasAlreadyPaid)
+        {
+            var fullOrder = await GetOrderByIdAsync(orderId, cancellationToken);
+            if (fullOrder != null)
+            {
+                await _emailService.SendOrderConfirmationEmailAsync(fullOrder, cancellationToken);
+            }
+        }
+
+        return true;
     }
 }

@@ -25,10 +25,6 @@ public static class ServiceCollectionExtensions
             options.UseSqlServer(connectionString, sqlOptions =>
             {
                 sqlOptions.MigrationsAssembly(typeof(NexaMartDbContext).Assembly.FullName);
-                sqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 3, 
-                    maxRetryDelay: TimeSpan.FromSeconds(5), 
-                    errorNumbersToAdd: null);
             }));
 
         // Register Custom Security Services (BCrypt Password Hasher & JWT Token Service)
@@ -38,6 +34,11 @@ public static class ServiceCollectionExtensions
         // Register Generic Repository and Unit of Work
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Register Paymob Payment Gateway
+        services.Configure<NexaMart.Application.Common.Models.PaymobSettings>(
+            configuration.GetSection(NexaMart.Application.Common.Models.PaymobSettings.SectionName));
+        services.AddHttpClient<NexaMart.Application.Interfaces.Services.IPaymobService, NexaMart.Infrastructure.Services.PaymobService>();
 
         return services;
     }

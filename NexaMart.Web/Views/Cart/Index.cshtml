@@ -208,11 +208,16 @@
                         <span class="display-6 fw-bold text-primary">$@Model.TotalAmount.ToString("N2")</span>
                     </div>
 
-                    <!-- Direct Official Invoice Generation Form -->
-                    <form asp-action="GenerateInvoice" method="post">
+                    <!-- Proceed to Full Checkout Button -->
+                    <a asp-action="Checkout" class="btn btn-gradient btn-lg w-100 py-3 mb-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-credit-card-2-front-fill fs-5"></i> Proceed to Checkout
+                    </a>
+
+                    <!-- Direct Official Invoice Quick Order Form -->
+                    <form asp-action="GenerateInvoice" method="post" class="mb-3">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-gradient btn-lg w-100 py-3 mb-3" onclick="return confirm('Generate official invoice and place order?');">
-                            <i class="bi bi-receipt-cutoff me-2"></i> Issue & View Full Invoice
+                        <button type="submit" class="btn btn-outline-custom w-100 py-2 small" onclick="return confirm('Place order immediately and generate official invoice?');">
+                            <i class="bi bi-lightning-charge me-1"></i> Quick 1-Click Invoice
                         </button>
                     </form>
 

@@ -15,9 +15,29 @@ public class Order
     public int UserId { get; set; }
     public ApplicationUser User { get; set; } = null!;
 
-    // Order Pricing Totals
+    // Financial Breakdown (Ready for Paymob & Accounting)
     public decimal SubTotal { get; set; } // Sum of product line totals
-    public decimal TotalAmount { get; set; } // Total amount payable
+    public decimal ShippingCost { get; set; } = 0.0m; // Delivery charges
+    public decimal TaxAmount { get; set; } = 0.0m; // Applicable tax / VAT
+    public decimal DiscountAmount { get; set; } = 0.0m; // Discounts or coupons applied
+    public decimal TotalAmount { get; set; } // Final payable amount: SubTotal + ShippingCost + TaxAmount - DiscountAmount
+    public string Currency { get; set; } = "EGP"; // Default currency (Egyptian Pound for Paymob)
+
+    // Payment Processing (Paymob Integration)
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.CashOnDelivery;
+    public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
+    public string? TransactionId { get; set; } // Paymob Transaction ID / Order Reference
+    public DateTime? PaidAt { get; set; } // Timestamp when transaction was captured
+
+    // Shipping & Billing Snapshot (Paymob Billing Data & Delivery Fulfillment)
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerEmail { get; set; } = string.Empty;
+    public string CustomerPhone { get; set; } = string.Empty;
+    public string ShippingAddress { get; set; } = string.Empty;
+    public string City { get; set; } = "Cairo";
+    public string State { get; set; } = "Cairo";
+    public string? PostalCode { get; set; }
+    public string? OrderNotes { get; set; }
 
     // Order Lifecycle and Cancellation Tracking
     public OrderStatus Status { get; set; } = OrderStatus.Pending;

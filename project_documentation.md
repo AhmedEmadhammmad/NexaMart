@@ -1,633 +1,656 @@
 # 📘 الدليل الهندسي والمعماري الشامل لمشروع NexaMart Enterprise
 ## Comprehensive System Architecture, Database ERD, Code Anatomy & Reviewer Guide
 
-> **موجّه لمراجع الكود والمهندسين (Code Reviewers & Technical Evaluators)**  
-> تم إعداد هذا التوثيق ليكون مرجعاً تقنياً وهندسياً فائق التفصيل يغطي كل جوانب منصة **NexaMart** المبنية وفق أعلى معايير **Clean Architecture** ونمط **Domain-Driven Design (DDD)** باستخدام **ASP.NET Core 8.0 MVC** و **Entity Framework Core**.  
-> يشرح هذا الملف سطر بسطر وبشكل تشريحي دقيق: مخطط قاعدة البيانات والعلاقات، بنية الطبقات، المستودعات، وحدة العمل، الخدمات، الـ DTOs، الـ ViewModels، وحدات التحكم، وطبقة التحويل (Mapping) بعد تقسيمها وتحسين أدائها، مع مسار تدفق البيانات وسجل لكافة التحديثات والتحسينات المضافة لضمان توفير وقت المراجعة بالكامل.
+> **موجّه لمراجع الكود، مهندسي البرمجيات، ولجان التقييم التقني (Technical Reviewers & Evaluators)**  
+> تم إعداد هذا المرجع التوثيقي ليكون سجلاً شاملاً بنسبة 100% يغطي كافة التفاصيل المعمارية والبرمجية لمنصة **NexaMart** المبنية وفق معايير **Clean Architecture** ونمط **Domain-Driven Design (DDD)** باستخدام **ASP.NET Core 8.0 MVC** و **Entity Framework Core 8.0** على **SQL Server**.  
+> يشرح هذا الملف تفصيلياً سطر بسطر: مخطط قاعدة البيانات والعلاقات، بنية الطبقات الأربع، المستودعات ووحدة العمل، كافة الخدمات الـ 11 ومنطق الأعمال، كائنات نقل البيانات (DTOs)، نماذج واجهة العرض (ViewModels)، طبقة التحويل المقسمة (Mappings)، منظومة الأمان ورفع الصور بفحص البايتات السحرية (Magic Bytes)، ومسارات تدفق البيانات مع سجل لكافة التحسينات المنجزة.
 
 ---
 
-## 📑 فهرس المحتويات
+## 📑 فهرس المحتويات الشامل
 1. [نظرة عامة على النظام وأهداف المنصة (Executive Overview)](#1-نظرة-عامة-على-النظام-وأهداف-المنصة-executive-overview)
-2. [مخطط قاعدة البيانات الشامل وتفصيل العلاقات (Comprehensive Database ERD)](#2-مخطط-قاعدة-البيانات-الشامل-وتفصيل-العلاقات-comprehensive-database-erd)
-3. [الهندسة المعمارية للنظام وتصميم الطبقات (System Design & Clean Architecture)](#3-الهندسة-المعمارية-للنظام-وتصميم-الطبقات-system-design--clean-architecture)
-4. [التشريح البرمجي التفصيلي خطوة بخطوة (Detailed Code Anatomy)](#4-التشريح-البرمجي-التفصيلي-خطوة-بخطوة-detailed-code-anatomy)
-   - [4.1 طبقة الـ Infrastructure: المستودعات ووحدة العمل (Generic Repository & Unit of Work)](#41-طبقة-الـ-infrastructure-المستودعات-ووحدة-العمل-generic-repository--unit-of-work)
-   - [4.2 طبقة الـ Application: الخدمات ومنطق الأعمال المحسّن (Application Services)](#42-طبقة-الـ-application-الخدمات-ومنطق-الأعمال-المحسن-application-services)
-   - [4.3 كائنات نقل البيانات (Data Transfer Objects - DTOs)](#43-كائنات-نقل-البيانات-data-transfer-objects---dtos)
-   - [4.4 نماذج واجهة العرض (Presentation ViewModels)](#44-نماذج-واجهة-العرض-presentation-viewmodels)
-   - [4.5 وحدات التحكم الرشيقة (Razor-Thin Web Controllers)](#45-وحدات-التحكم-الرشيقة-razor-thin-web-controllers)
-   - [4.6 طبقة التحويل المقسمة والصريحة (Modular Mapping Architecture)](#46-طبقة-التحويل-المقسمة-والصريحة-modular-mapping-architecture)
-5. [ربط الطبقات ومسار تدفق البيانات الشامل (End-to-End Dataflow & Request Lifecycle)](#5-ربط-الطبقات-ومسار-تدفق-البيانات-الشامل-end-to-end-dataflow--request-lifecycle)
-6. [أهم الدوال والخوارزميات البرمجية والتحسينات (Critical Algorithms & Performance Optimizations)](#6-أهم-الدوال-والخوارزميات-البرمجية-والتحسينات-critical-algorithms--performance-optimizations)
-7. [سجل كافة المميزات والتحسينات المنفذة (Feature & Optimization Inventory)](#7-سجل-كافة-المميزات-والتحسينات-المنفذة-feature--optimization-inventory)
-8. [دليل المراجع السريع للفحص والاختبار (Reviewer Quick-Start & Testing Guide)](#8-دليل-المراجع-السريع-للفحص-والاختبار-reviewer-quick-start--testing-guide)
+2. [مخطط قاعدة البيانات الشامل وتفصيل العلاقات (Database ERD & Constraints)](#2-مخطط-قاعدة-البيانات-الشامل-وتفصيل-العلاقات-database-erd--constraints)
+3. [الهندسة المعمارية للنظام وتصميم الطبقات (Clean Architecture Design)](#3-الهندسة-المعمارية-للنظام-وتصميم-الطبقات-clean-architecture-design)
+4. [التشريح البرمجي لطبقة الـ Domain (Pure Domain POCOs & Enums)](#4-التشريح-البرمجي-لطبقة-الـ-domain-pure-domain-pocos--enums)
+5. [التشريح البرمجي لطبقة الـ Infrastructure (EF Core, Repositories & Security)](#5-التشريح-البرمجي-لطبقة-الـ-infrastructure-ef-core-repositories--security)
+6. [التشريح البرمجي لطبقة الـ Application (Services, DTOs & Business Rules)](#6-التشريح-البرمجي-لطبقة-الـ-application-services-dtos--business-rules)
+7. [التشريح البرمجي لطبقة الـ Presentation Web (Controllers, Mappings & Views)](#7-التشريح-البرمجي-لطبقة-الـ-presentation-web-controllers-mappings--views)
+8. [منظومة الأمان والحماية الشاملة (Enterprise Security & Defense-in-Depth)](#8-منظومة-الأمان-والحماية-الشاملة-enterprise-security--defense-in-depth)
+9. [مخططات تسلسل تدفق البيانات (End-to-End Sequence Diagrams)](#9-مخططات-تسلسل-تدفق-البيانات-end-to-end-sequence-diagrams)
+10. [سجل كافة الميزات والتحسينات المنجزة (Feature & Refactoring Ledger)](#10-سجل-كافة-الميزات-والتحسينات-المنجزة-feature--refactoring-ledger)
+11. [دليل المراجع السريع للفحص والتشغيل (Reviewer Quick-Start & Testing Guide)](#11-دليل-المراجع-السريع-للفحص-والتشغيل-reviewer-quick-start--testing-guide)
 
 ---
 
 ## 1. نظرة عامة على النظام وأهداف المنصة (Executive Overview)
 
-**NexaMart** هي منصة تجارة إلكترونية وإدارة مؤسسية متكاملة (Enterprise E-Commerce & Administrative Governance Platform) تم بناؤها لتكون نموذجاً احترافياً فائق السرعة، خالي تماماً من الأكواد الميتة (Dead Code)، وقابل للتوسع (Scalable) وسهل الصيانة (Maintainable)، مع مراعاة أعلى معايير أمان التطبيقات ونظافة الكود.
+منصة **NexaMart** هي نظام تجارة إلكترونية وإدارة مؤسسية متكاملة (**Enterprise E-Commerce & Administrative Governance Platform**) يجمع بين تجربة تسوق تفاعلية للمستهلك ولوحات تحكم تنفيذية متعددة المستويات لإدارة العمليات والمخزون والحوكمة الأمنية.
 
-### ركائز النظام الأساسية:
-1. **متجر العملاء (Storefront Experience)**:
-   - تصفح وتصفية المنتجات مع نظام ترقيم صفحات حديث ومريح للعين.
-   - سلة تسوق وقائمة مفضلة كاملة مع إدارة الكميات الفورية.
-   - **إصدار الفاتورة الضريبية الرسمية المباشرة**: توليد فواتير رسمية معتمدة قابلة للطباعة تخصم المخزون ذرّياً في خطوة واحدة دون تعقيدات وهمية.
-2. **مركز قيادة إدارة المتجر (Store Admin Command Portal)**:
-   - واجهة مستقلة عبر `_AdminLayout.cshtml` **خالية تماماً من أي شريط تنقل عام للمتجر (No Storefront Navbar)**.
-   - إدارة كاملة لكافة المنتجات والأقسام والطلبات من خلال **جداول بيانات حصرية (Data Tables وليست كروت)**.
-   - بحث شامل وفوري برقم الـ ID للمنتجات والأقسام والطلبات مع توجيه ذكي للمسار الصحيح.
-   - مؤشرات فورية للمخزون المنخفض، متوسطات تقييمات الأقسام المحسوبة في طبقة الخدمات، وتصفير تقييمات المنتجات.
-3. **لوحة الإدارة العليا وحوكمة المنصة (Executive SuperAdmin Console)**:
-   - إدارة شاملة لكافة حسابات النظام وتوزيع الرتب (`Customer`, `Admin`, `SuperAdmin`).
-   - حظر وتفعيل فوري للحسابات مع حماية أمنية صارمة تمنع المشرف من حظر حسابه أو تنزيل رتبته ذاتياً.
-   - فحص السجل المالي وسجل طلبات أي مستخدم وتعيين مشرفين جدد.
-4. **تسجيل الدخول الموحد والذكي (Unified Authentication Gateway)**:
-   - بوابة دخول واحدة فائقة الأمان تستقبل إما **البريد الإلكتروني** أو **الـ ID الرقمي للموظفين** مع توجيه آلي مباشر حسب الصلاحيات (مع حذف كامل لأي كود ميت مثل `StaffLoginAsync`).
+```
+                           ┌─────────────────────────────────────────────────────────┐
+                           │                 NexaMart Enterprise System               │
+                           └────────────────────────────┬────────────────────────────┘
+                                                        │
+         ┌──────────────────────────────────────────────┼─────────────────────────────────────────────┐
+         ▼                                              ▼                                             ▼
+┌─────────────────────────────────┐   ┌─────────────────────────────────────────┐   ┌─────────────────────────────────────────┐
+│     Storefront Experience       │   │       Store Admin Command Center        │   │    Executive SuperAdmin Console         │
+│  - Modern Product Browsing      │   │  - Dedicated Navbar-Free Layout         │   │  - Full System & Role Governance        │
+│  - Dynamic Star Ratings         │   │  - Strict Data Tables (Zero Cards)      │   │  - Safe Promotion/Demotion Hierarchy    │
+│  - Cart & Persistent Wishlist   │   │  - Universal Search by ID Engine        │   │  - Account Deactivation/Activation      │
+│  - Instant Tax Invoice Checkout │   │  - In-Service Realtime Avg Rating       │   │  - User Spending & Order History Audit  │
+│  - Complaint Ticket System      │   │  - Drag & Drop Secure Image Management  │   │  - Administrator Account Provisioning   │
+└─────────────────────────────────┘   └─────────────────────────────────────────┘   └─────────────────────────────────────────┘
+```
+
+### ركائز النظام الأساسية ومجالات الاستخدام:
+1. **متجر العملاء ([Storefront Portal](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/HomeController.cs))**:
+   - تصفح كتالوج المنتجات وتصنيفها مع دعم الترقيم المتقدم للبيانات من قاعدة البيانات مباشرة ([ProductsController](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/ProductsController.cs)).
+   - سلة تسوق ديناميكية وقائمة مفضلة دائمة مع التحقق الفوري من حدود المخزون.
+   - **إصدار الفاتورة الضريبية الفورية المعتمدة ([Invoice Receipt](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/OrdersController.cs))**: توليد فواتير رسمية معتمدة قابلة للطباعة تخصم المخزون ذرّياً في خطوة واحدة دون تعقيدات وهمية أو شاشات دفع صورية.
+   - مركز تقديم الشكاوى والاستفسارات وتوليد تذاكر دعم فني مرقمة مع توجيه بريدي ([ContactUs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/HomeController.cs#L47-L69)).
+
+2. **مركز قيادة إدارة المتجر ([Store Admin Command Portal](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/AdminController.cs))**:
+   - واجهة منعزلة تماماً تعتمد على تخطيط مخصص [\_AdminLayout.cshtml](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Views/Shared/_AdminLayout.cshtml) **خالية تماماً من شريط تنقل المتجر العام (Storefront Navbar)** لضمان التركيز الإداري.
+   - إدارة العمليات والكتالوج من خلال **جداول بيانات حصرية (Data Tables وليست كروت)** لتسهيل فرز ومتابعة كميات المخزون وحالات الطلبات.
+   - محرك بحث ذكي فوري برقم الـ ID يكتشف نوع الكيان تلقائياً ويوجه المشرف لشاشته مباشرة.
+   - رفع آمن للصور بتقنية السحب والإفلات (Drag & Drop) وفحص التوقيع الثنائي الحقيقي (Magic Bytes).
+
+3. **لوحة الإدارة العليا وحوكمة المنصة ([Executive SuperAdmin Console](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/SuperAdminController.cs))**:
+   - حوكمة شاملة لكافة حسابات النظام وتوزيع الصلاحيات والرتب (`Customer`, `Admin`, `SuperAdmin`).
+   - قواعد حماية أمنية ذاتية تمنع المشرف العام من حظر حسابه أو تنزيل رتبته الذاتية لتفادي قفل النظام العرضي.
+   - مراجعة السجل المالي والإنفاق التاريخي لكل عميل وتعيين وتشفير حسابات المشرفين الجدد.
+
+4. **بوابة تسجيل الدخول الموحدة ([Unified Authentication Gateway](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/AccountController.cs))**:
+   - مدخل تسجيل دخول ذكي واحد يستقبل **البريد الإلكتروني للعملاء** أو **الـ ID الرقمي للموظفين** مع توجيه تلقائي مباشر حسب الصلاحيات، مع فحص قوة كلمات المرور وحجب كلمات السر الشائعة.
 
 ---
 
-## 2. مخطط قاعدة البيانات الشامل وتفصيل العلاقات (Comprehensive Database ERD)
+## 2. مخطط قاعدة البيانات الشامل وتفصيل العلاقات (Database ERD & Constraints)
 
-تم بناء قاعدة البيانات عبر **Code-First** باستخدام **Entity Framework Core 8.0** على **SQL Server**، مع ضبط دقيق للقيود والفهارس والعلاقات لضمان سلامة البيانات (Data Integrity).
+تم تصميم قاعدة البيانات بأسلوب **Code-First** عبر **Entity Framework Core 8.0** على **SQL Server**، مع فرض قيود صارمة على مستوى الـ Schema تضمن سلامة البيانات (Referential Integrity) وعدم فقدان السجلات التاريخية المالية.
 
-### مخطط الكيانات والعلاقات (Mermaid Database Diagram)
+### مخطط الكيانات والعلاقات (Comprehensive Database Diagram):
 
 ```mermaid
 erDiagram
-    APPLICATION_USER ||--o{ ORDER : "places (1:N)"
-    APPLICATION_USER ||--o{ CART_ITEM : "owns in cart (1:N)"
-    APPLICATION_USER ||--o{ WISHLIST_ITEM : "saves in wishlist (1:N)"
-    APPLICATION_USER ||--o{ REVIEW : "submits (1:N)"
+    APPLICATION_USER ||--o{ ORDER : "places (1:N) [Restrict Delete]"
+    APPLICATION_USER ||--o{ CART_ITEM : "owns in cart (1:N) [Cascade Delete]"
+    APPLICATION_USER ||--o{ WISHLIST_ITEM : "saves in wishlist (1:N) [Cascade Delete]"
+    APPLICATION_USER ||--o{ REVIEW : "writes (1:N) [Restrict Delete]"
 
-    CATEGORY ||--o{ PRODUCT : "classifies (1:N)"
+    CATEGORY ||--o{ PRODUCT : "classifies (1:N) [Restrict Delete]"
 
-    PRODUCT ||--o{ ORDER_ITEM : "contained in (1:N)"
-    PRODUCT ||--o{ CART_ITEM : "added to (1:N)"
-    PRODUCT ||--o{ WISHLIST_ITEM : "bookmarked in (1:N)"
-    PRODUCT ||--o{ REVIEW : "rated by (1:N)"
+    PRODUCT ||--o{ ORDER_ITEM : "contained in (1:N) [Restrict Delete]"
+    PRODUCT ||--o{ CART_ITEM : "added to (1:N) [Cascade Delete]"
+    PRODUCT ||--o{ WISHLIST_ITEM : "bookmarked in (1:N) [Cascade Delete]"
+    PRODUCT ||--o{ REVIEW : "rated in (1:N) [Cascade Delete]"
 
-    ORDER ||--|{ ORDER_ITEM : "consists of (1:N)"
+    ORDER ||--|{ ORDER_ITEM : "composed of (1:N) [Cascade Delete]"
 
     APPLICATION_USER {
-        int Id PK "Auto-Increment Primary Key"
-        string FullName "NVARCHAR(100), NOT NULL"
-        string Email UK "NVARCHAR(150), Unique Index, NOT NULL"
-        string PasswordHash "NVARCHAR(255), BCrypt Hash"
-        string PhoneNumber "NVARCHAR(20), Nullable"
-        int RoleType "Enum: 0=Customer, 1=Admin, 2=SuperAdmin"
-        bool IsActive "Account Status: True=Active, False=Blocked"
+        int Id PK "IDENTITY(1,1)"
+        string FullName "NVARCHAR(150), NOT NULL"
+        string Email UK "NVARCHAR(256), UNIQUE, NOT NULL"
+        string PasswordHash "NVARCHAR(500), BCrypt Cost 12"
+        string PhoneNumber "NVARCHAR(30), Nullable"
+        string RoleType "NVARCHAR(50), Enum Conversion"
+        bool IsActive "BIT, Default: 1"
         string RefreshToken "NVARCHAR(500), Nullable"
-        datetime RefreshTokenExpiresAt "Nullable"
-        datetime LastLoginAt "Nullable, Tracks Activity"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        datetime RefreshTokenExpiresAt "DATETIME2, Nullable"
+        datetime LastLoginAt "DATETIME2, Nullable"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 
     CATEGORY {
-        int Id PK "Auto-Increment Primary Key"
-        string Name "NVARCHAR(100), NOT NULL"
-        string Description "NVARCHAR(500), Nullable"
+        int Id PK "IDENTITY(1,1)"
+        string Name "NVARCHAR(150), NOT NULL"
+        string Description "NVARCHAR(MAX), Nullable"
         string ImageUrl "NVARCHAR(500), Nullable"
-        int DisplayOrder "Sorting Priority"
-        bool IsActive "Catalog Visibility Flag"
-        decimal AverageRating "DECIMAL(18,2) - Calculated via Service"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        int DisplayOrder "INT, Sorting Priority"
+        bool IsActive "BIT, Catalog Visibility"
+        decimal AverageRating "DECIMAL(18,2) - Calculated in Service"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 
     PRODUCT {
-        int Id PK "Auto-Increment Primary Key"
-        int CategoryId FK "Foreign Key to Category"
+        int Id PK "IDENTITY(1,1)"
+        int CategoryId FK "Foreign Key -> Category.Id"
         string Name "NVARCHAR(200), NOT NULL"
         string Description "NVARCHAR(MAX), Nullable"
         string ImageUrl "NVARCHAR(500), Nullable"
-        decimal Price "DECIMAL(18,2), Precision Guaranteed"
-        int StockQuantity "Inventory Level (Atomic Decrement)"
-        decimal AverageRating "DECIMAL(18,2) - Zeroed to 0.0"
-        int ReviewCount "Integer - Zeroed to 0"
-        bool IsActive "Visibility Flag"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        decimal Price "DECIMAL(18,2), Precision Enforced"
+        int StockQuantity "INT, Inventory Level"
+        decimal AverageRating "DECIMAL(18,2), Default: 0.0"
+        int ReviewCount "INT, Default: 0"
+        bool IsActive "BIT, Catalog Visibility"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 
     ORDER {
-        int Id PK "Auto-Increment Primary Key"
-        string OrderNumber UK "NVARCHAR(50), Format: NXM-yyyyMMdd-XXXX"
-        int UserId FK "Foreign Key to ApplicationUser"
+        int Id PK "IDENTITY(1,1)"
+        string OrderNumber UK "NVARCHAR(50), UNIQUE, NXM-yyyyMMdd-XXXX"
+        int UserId FK "Foreign Key -> ApplicationUser.Id"
         decimal SubTotal "DECIMAL(18,2)"
-        decimal TotalAmount "DECIMAL(18,2) - Total Amount Payable"
-        int Status "Enum: 0=Pending, 1=Processing, 2=Shipped, 3=Delivered, 4=Cancelled"
+        decimal TotalAmount "DECIMAL(18,2), Payable Balance"
+        int Status "INT, Enum: OrderStatus"
         string CancellationReason "NVARCHAR(500), Nullable"
-        datetime CancelledAt "Nullable"
-        int CancelledByUserId "Nullable FK"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        datetime CancelledAt "DATETIME2, Nullable"
+        int CancelledByUserId "INT, Nullable FK"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 
     ORDER_ITEM {
-        int Id PK "Auto-Increment Primary Key"
-        int OrderId FK "Foreign Key to Order"
-        int ProductId FK "Foreign Key to Product"
+        int Id PK "IDENTITY(1,1)"
+        int OrderId FK "Foreign Key -> Order.Id"
+        int ProductId FK "Foreign Key -> Product.Id"
         string ProductName "NVARCHAR(200) - Historical Snapshot"
         string ProductImageUrl "NVARCHAR(500) - Historical Snapshot"
         decimal UnitPrice "DECIMAL(18,2) - Price at Purchase"
-        int Quantity "Purchased Amount"
+        int Quantity "INT, Purchased Units"
         decimal TotalPrice "DECIMAL(18,2) - Quantity * UnitPrice"
-        bool IsCancelled "Individual Item Cancellation Flag"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        bool IsCancelled "BIT, Individual Item Flag"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 
     CART_ITEM {
-        int Id PK "Auto-Increment Primary Key"
-        int UserId FK "Foreign Key to ApplicationUser"
-        int ProductId FK "Foreign Key to Product"
-        int Quantity "Quantity in Cart (Min 1)"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        int Id PK "IDENTITY(1,1)"
+        int UserId FK "Foreign Key -> ApplicationUser.Id"
+        int ProductId FK "Foreign Key -> Product.Id"
+        int Quantity "INT, Min: 1"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 
     WISHLIST_ITEM {
-        int Id PK "Auto-Increment Primary Key"
-        int UserId FK "Foreign Key to ApplicationUser"
-        int ProductId FK "Foreign Key to Product"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        int Id PK "IDENTITY(1,1)"
+        int UserId FK "Foreign Key -> ApplicationUser.Id"
+        int ProductId FK "Foreign Key -> Product.Id, Unique (UserId, ProductId)"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 
     REVIEW {
-        int Id PK "Auto-Increment Primary Key"
-        int ProductId FK "Foreign Key to Product"
-        int UserId FK "Foreign Key to ApplicationUser"
-        int Rating "1 to 5 Stars"
-        string Comment "NVARCHAR(1000)"
-        datetime CreatedAt "UTC Timestamp"
-        datetime UpdatedAt "Nullable UTC Timestamp"
+        int Id PK "IDENTITY(1,1)"
+        int ProductId FK "Foreign Key -> Product.Id"
+        int UserId FK "Foreign Key -> ApplicationUser.Id"
+        int Rating "INT, Range: 1 to 5"
+        string Comment "NVARCHAR(1000), Nullable"
+        datetime CreatedAt "DATETIME2, UTC"
+        datetime UpdatedAt "DATETIME2, Nullable UTC"
     }
 ```
 
-### القواعد الهندسية للعلاقات وسلامة البيانات (Referential Integrity & Constraints):
-1. **علاقة المستخدم بالطلبات (`ApplicationUser` &rarr; `Order`) [1:N]**:
-   - المستخدم يمكن أن يملك صفراً أو عدة طلبات.
-   - **سلوك الحذف (`DeleteBehavior.Restrict`)**: تم منع الحذف المتتالي (Cascade Delete) قطعياً لحماية السجلات المالية التاريخية (Financial Audit Trail).
-2. **علاقة القسم بالمنتجات (`Category` &rarr; `Product`) [1:N]**:
-   - كل قسم يحوي منتجات متعددة.
-   - **سلوك الحذف (`DeleteBehavior.Restrict`)**: لا يسمح بحذف أي قسم يحوي منتجات مرتبطة لمنع وجود منتجات يتيمة (Orphan Products).
-3. **علاقة الطلب ببنود الطلب (`Order` &rarr; `OrderItem`) [1:N]**:
-   - كل طلب يتكون من بند واحد أو أكثر.
-   - **اللقطة التاريخية (Historical Snapshot Pattern)**: يتم نسخ اسم المنتج، صورته، وسعره وقت الشراء داخل جدول `OrderItem`. هذا يضمن ثبات قيمة الفواتير السابقة تاريخياً حتى لو تغير سعر المنتج في الكتالوج مستقبلاً.
-4. **علاقات السلة والمفضلة (`CartItem`, `WishlistItem`) [1:N]**:
-   - فهارس فريدة مركبة (`Unique Index on (UserId, ProductId)`) تمنع تكرار نفس المنتج للمستخدم داخل السلة؛ بدلاً من ذلك يتم تعديل حقل `Quantity`.
-5. **تصفير التقييمات وسلامتها (`Reviews` & `Product.AverageRating`)**:
-   - تم تصفير كافة مراجعات قاعدة البيانات وضبط `AverageRating = 0.0m` و `ReviewCount = 0` لجميع المنتجات لتبدأ المنصة بسجل نظيف تماماً.
+### القواعد الصارمة لسلامة البيانات والعلاقات (Referential Integrity):
+1. **علاقة المستخدم بالطلبات ([ApplicationUser](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/ApplicationUser.cs) &rarr; [Order](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Order.cs)) [1:N]**:
+   - نوع الحذف: `DeleteBehavior.Restrict`. يمنع نهائياً حذف أي مستخدم لديه سجل طلبات في النظام، حفاظاً على الأثر المالي والتدقيقي (Financial Audit Trail).
+2. **علاقة القسم بالمنتجات ([Category](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Category.cs) &rarr; [Product](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Product.cs)) [1:N]**:
+   - نوع الحذف: `DeleteBehavior.Restrict`. تم ضبطها في [CategoryConfiguration.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Data/Configurations/CategoryConfiguration.cs) و [CategoryService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/CategoryService.cs#L147-L165)؛ تمنع حذف أي قسم يحتوي على منتجات مرتبطة لحماية الكتالوج من المنتجات اليتيمة.
+3. **علاقة بنود الطلب بالمنتج ([OrderItem](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/OrderItem.cs) &rarr; [Product](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Product.cs)) [1:N]**:
+   - نوع الحذف: `DeleteBehavior.Restrict`. لا يمكن حذف منتج تم شراؤه مسبقاً في طلبات مكتملة.
+   - **نمط اللقطة التاريخية (Historical Snapshot Pattern)**: يتم نسخ `ProductName`, `ProductImageUrl`, و `UnitPrice` داخل جدول `OrderItem` وقت إصدار الفاتورة. هذا يضمن ثبات قيمة الفواتير السابقة قانونياً وتاريخياً حتى لو قام التاجر بتعديل سعر المنتج أو اسمه في الكتالوج مستقبلاً.
+4. **علاقة الطلب ببنوده ([Order](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Order.cs) &rarr; [OrderItem](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/OrderItem.cs)) [1:N]**:
+   - نوع الحذف: `DeleteBehavior.Cascade`. بنود الطلب تابعة للطلب ككل.
+5. **جداول السلة والمفضلة ([CartItem](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/CartItem.cs), [WishlistItem](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/WishlistItem.cs))**:
+   - نوع الحذف: `DeleteBehavior.Cascade` عند حذف المستخدم أو حذف المنتج.
+   - فهرس فريد مركب: `Unique Index on (UserId, ProductId)` على المفضلة لمنع تكرار نفس الصنف لنفس العميل.
 
 ---
 
-## 3. الهندسة المعمارية للنظام وتصميم الطبقات (System Design & Clean Architecture)
+## 3. الهندسة المعمارية للنظام وتصميم الطبقات (Clean Architecture Design)
 
-يتبع المشروع بدقة مبدأ **Clean Architecture** (المعروف أيضاً بـ Onion Architecture)، حيث تم تقسيم النظام إلى 4 مشاريع مستقلة تماماً داخل الـ Solution:
+يتبع النظام بدقة فلسفة **Clean Architecture** (المعمارية النظيفة)، حيث تتجه جميع التبعيات حصراً نحو الداخل باتجاه النواة (Inward Dependency Rule):
 
 ```
-                  ┌────────────────────────────────────────────────────────┐
-                  │                    NexaMart.Web                        │
-                  │   - Controllers (Thin Orchestrators: 1-5 lines)        │
-                  │   - Razor Views & Admin Layouts                        │
-                  │   - ViewModels & Validation Rules                      │
-                  │   - Modular Mappings: Storefront, Admin, SuperAdmin    │
-                  └──────────────────────────┬─────────────────────────────┘
-                                             │ References
-                  ┌──────────────────────────▼─────────────────────────────┐
-                  │                 NexaMart.Application                   │
-                  │   - Service Interfaces (IAdminService, etc.)           │
-                  │   - Application Services & Encapsulated Business Rules │
-                  │   - Data Transfer Objects (DTOs)                       │
-                  │   - High Performance Aggregations (Single GroupBy)     │
-                  │   - Common Pagination (PagedResult<T>)                 │
-                  └──────────────┬───────────────────────────┬─────────────┘
-                                 │                           │
-                   References &  │                           │ References
-                   Implements    │                           │
-                  ┌──────────────▼─────────────┐ ┌───────────▼─────────────┐
-                  │   NexaMart.Infrastructure  │ │     NexaMart.Domain     │
-                  │   - NexaMartDbContext      │ │   - Entities & Enums    │
-                  │   - GenericRepository<T>   │ │   - Core Business Rules │
-                  │   - Streamlined UnitOfWork │ │   - Pure C# (No 3rd-    │
-                  │   - BCrypt Security        │ │     party dependencies) │
-                  │   - Auto Timestamp Auditing│ │                         │
-                  └────────────────────────────┘ └─────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                                  NexaMart.Web                                     │
+│  - Presentation Layer: Controllers, Razor Views, Admin Layout, ViewModels         │
+│  - Thin Orchestrators (1-5 lines per action)                                      │
+│  - Modular Mappings: StorefrontMappings, AdminMappings, SuperAdminMappings        │
+│  - Anti-XSS validation, Secure File Upload Handlers                               │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         │ References
+┌────────────────────────────────────────▼──────────────────────────────────────────┐
+│                               NexaMart.Application                                │
+│  - Core Business Rules, Validations & Workflows                                   │
+│  - 11 Application Services & Interfaces (AdminService, OrderService, etc.)        │
+│  - Data Transfer Objects (DTOs) & Common Pagination Filter Models                 │
+│  - High Performance LINQ Aggregations (Single GroupBy Queries)                    │
+│  - Clean Contracts: Repositories & Security Abstractions                          │
+└──────────────────┬────────────────────────────────────────────────┬───────────────┘
+                   │ References & Implements                        │ References
+┌──────────────────▼───────────────────────────┐ ┌──────────────────▼───────────────┐
+│            NexaMart.Infrastructure           │ │             NexaMart.Domain      │
+│  - NexaMartDbContext & 8 Configurations      │ │  - Core Domain Entities (8)      │
+│  - GenericRepository<T> & Streamlined UoW    │ │  - Business Enums                │
+│  - BCrypt WorkFactor=12 Password Hashing     │ │  - Zero NuGet Dependencies       │
+│  - Database Seeder (Accounts, Categories, 500)│ │  - Pure C# Objects (POCOs)       │
+│  - Auto-Audit Timestamps via ChangeTracker   │ │                                  │
+└──────────────────────────────────────────────┘ └──────────────────────────────────┘
 ```
 
-### قواعد تدفق التبعيات (Inward Dependency Rules):
-- **الطبقة المركزية (Domain Layer)**: لا تعتمد على أي طبقة أخرى ولا على أي حزمة خارجية (Zero External NuGet Dependencies). نقية 100%. الكيانات تمثل مفاهيم العمل المستقلة.
-- **طبقة التطبيق (Application Layer)**: تعتمد فقط على الـ Domain. تحتوي على الـ Interfaces وقواعد العمل والتحقق والحسابات الإحصائية وموديلات الـ DTO.
-- **طبقة البنية التحتية (Infrastructure Layer)**: تعتمد على Application و Domain، وتنفذ الاتصال الفعلي بقاعدة البيانات عبر EF Core والمستودعات المخصصة وإدارة المعاملات والتشفير.
-- **طبقة العرض (Web Layer)**: نقطة الدخول للتطبيق، تعتمد على Application وتستهلك الـ Services عبر الـ Dependency Injection، وتعتمد على تحويلات صريحة ومقسمة (Modular Mappings) دون التعامل المباشر مع DbContext.
+### قواعد التبعيات وانضباط المعمارية:
+1. **[NexaMart.Domain](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/)**:
+   - لا تعتمد على أي طبقة أخرى ولا على أي مكتبة خارجية (Zero 3rd-party Dependencies). نقية 100%.
+2. **[NexaMart.Application](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/)**:
+   - تعتمد فقط على الـ Domain. تعرّف الواجهات (Interfaces) ونماذج البيانات (DTOs) ومنطق الأعمال والحسابات الإحصائية المجمعة.
+3. **[NexaMart.Infrastructure](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/)**:
+   - تعتمد على Application و Domain، وتنفذ الاتصال بالـ SQL Server وتوفر التشفير وخدمات التوكن وإدارة المعاملات وحفظ التغييرات.
+4. **[NexaMart.Web](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/)**:
+   - نقطة دخول النظام (Host)، تعتمد على Application و Infrastructure للتسجيل في حاوية الـ DI، وتستهلك الخدمات عبر الـ Controllers المجرّدة دون التعامل المباشر مع جداول قاعدة البيانات.
 
 ---
 
-## 4. التشريح البرمجي التفصيلي خطوة بخطوة (Detailed Code Anatomy)
+## 4. التشريح البرمجي لطبقة الـ Domain (Pure Domain POCOs & Enums)
 
-فيما يلي شرح تشريحي دقيق لمكونات الكود الأساسية بعد تنفيذ كافة التحسينات وإزالة التكرارات.
+تحتوي هذه الطبقة على الكيانات المركزية للنظام ممثلة كـ POCOs نقية تماماً دون أي ارتباط بأي إطار عمل:
 
----
+### 1. الكيانات الأساسية (Entities):
+- **[ApplicationUser.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/ApplicationUser.cs)**:
+  - يحمل هوية المستخدم، بريده الإلكتروني، التشفير بـ BCrypt، رقم الهاتف، رتبته `RoleType` ([UserRoleType](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Enums/UserRoleType.cs))، حالة التفعيل `IsActive`، حقول الـ JWT Refresh Token، وتوقيت آخر تسجيل دخول `LastLoginAt`.
+  - علاقات التنقل: مجموعات `Orders`, `CartItems`, `WishlistItems`, `Reviews`.
+- **[Product.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Product.cs)**:
+  - صنف الكتالوج، يربط بالقسم `CategoryId`، ويحمل الاسم، الوصف، رابط الصورة، السعر بدقة `decimal(18,2)`، رصيد المخزون `StockQuantity`، متوسط التقييم `AverageRating` (يبدأ بـ 0.0)، وعدد المراجعات `ReviewCount`.
+- **[Category.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Category.cs)**:
+  - قسم المنتجات، يحمل الاسم، الوصف، الصورة، ترتيب العرض `DisplayOrder`، حالة التفعيل `IsActive`، وحقل `AverageRating` المحسوب ديناميكياً في طبقة الخدمات.
+- **[Order.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Order.cs)**:
+  - رأس الطلب، يحمل المعرف الفريد `OrderNumber` بتنسيق `NXM-yyyyMMdd-XXXX`، معرف العميل `UserId`، الإجمالي `SubTotal`، المبلغ المطلوب سداده `TotalAmount`، وحالة الطلب `Status` ([OrderStatus](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Enums/OrderStatus.cs))، وتفاصيل الإلغاء وتوقيته `CancelledAt` ومعرف من قام بالإلغاء `CancelledByUserId`.
+- **[OrderItem.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/OrderItem.cs)**:
+  - بند الطلب، يربط بالطلب والمنتج، ويحفظ اللقطة التاريخية الثابتة (`ProductName`, `ProductImageUrl`, `UnitPrice`) مع الكمية والإجمالي وعلم إلغاء البند `IsCancelled`.
+- **[CartItem.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/CartItem.cs)**:
+  - عنصر سلة التسوق الخاصة بالمستخدم مع الكمية المطلوبة.
+- **[WishlistItem.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/WishlistItem.cs)**:
+  - عنصر قائمة المفضلة المحفوظ للعميل.
+- **[Review.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Entities/Review.cs)**:
+  - تقييم ومراجعة العميل للمنتج بنجوم من 1 إلى 5 مع التعليق الاختياري.
 
-### 4.1 طبقة الـ Infrastructure: المستودعات ووحدة العمل (Generic Repository & Unit of Work)
-
-#### أولاً: المستودع العام GenericRepository.cs
-يعزل كافة استعلامات Entity Framework Core خلف واجهة مجردة موحدة:
-
-```csharp
-public class GenericRepository<T> : IGenericRepository<T> where T : class
-{
-    protected readonly NexaMartDbContext _context;
-    protected readonly DbSet<T> _dbSet;
-
-    public GenericRepository(NexaMartDbContext context)
-    {
-        _context = context;
-        _dbSet = _context.Set<T>(); // ربط المستودع بنوع الجدول المقابل في EF Core
-    }
-```
-* **سطر بسطر لدوال المستودع الأساسية**:
-  1. `Query(bool disableTracking = true)`:
-     ```csharp
-     public virtual IQueryable<T> Query(bool disableTracking = true)
-     {
-         return disableTracking ? _dbSet.AsNoTracking() : _dbSet;
-     }
-     ```
-     - تتيح تكوين استعلامات LINQ مرنة قابلة للفلترة والترقيم قبل تنفيذها في قاعدة البيانات.
-     - استخدام `AsNoTracking()` افتراضياً يعطل تتبع الكائنات في الذاكرة، مما يقلل استهلاك الرام ويزيد سرعة القراءة بنسبة تتجاوز 40%.
-     - عند الرغبة في تعديل الكائنات (مثل خصم المخزون)، يتم تمرير `disableTracking: false` لتمكين التتبع السلس.
-  2. `GetByIdAsync(int id, CancellationToken cancellationToken)`:
-     - تستخدم `_dbSet.FindAsync` للبحث الفوري بالمفتاح الأساسي وتبحث أولاً في الـ Local Memory Cache.
-  3. `Update(T entity)` و `Delete(T entity)`:
-     - تتحقق من حالة الكائن؛ إن كان منفصلاً (`Detached`) تقوم بعمل `_dbSet.Attach` ثم ضبط الحالة، مما يمنع حدوث مشاكل التعقب الشائعة.
-
-#### ثانياً: وحدة العمل الرشيقة UnitOfWork.cs
-تم تنظيف وحدة العمل بالكامل عبر إزالة الـ `ConcurrentDictionary` غير المستخدمة وإزالة دالة `Repository<T>()`، والاعتماد حصرياً على الـ Properties المحددة صراحة (Strongly-Typed) لضمان أقصى سرعة وأمان وقت الترجمة:
-
-```csharp
-public class UnitOfWork : IUnitOfWork
-{
-    private readonly NexaMartDbContext _context;
-    private IDbContextTransaction? _transaction;
-
-    public UnitOfWork(NexaMartDbContext context)
-    {
-        _context = context;
-        Products = new GenericRepository<Product>(_context);
-        Categories = new GenericRepository<Category>(_context);
-        CartItems = new GenericRepository<CartItem>(_context);
-        WishlistItems = new GenericRepository<WishlistItem>(_context);
-        Orders = new GenericRepository<Order>(_context);
-        OrderItems = new GenericRepository<OrderItem>(_context);
-        Reviews = new GenericRepository<Review>(_context);
-        Users = new GenericRepository<ApplicationUser>(_context);
-    }
-
-    public IGenericRepository<Product> Products { get; }
-    public IGenericRepository<Category> Categories { get; }
-    public IGenericRepository<CartItem> CartItems { get; }
-    public IGenericRepository<WishlistItem> WishlistItems { get; }
-    public IGenericRepository<Order> Orders { get; }
-    public IGenericRepository<OrderItem> OrderItems { get; }
-    public IGenericRepository<Review> Reviews { get; }
-    public IGenericRepository<ApplicationUser> Users { get; }
-```
-* **تشريح إدارة المعاملات وحفظ التوقيتات الآلي**:
-  - `CompleteAsync`: تستدعي `UpdateTimestamps()` ثم تحفظ التغييرات.
-  - `UpdateTimestamps()`:
-    ```csharp
-    private void UpdateTimestamps()
-    {
-        foreach (var entry in _context.ChangeTracker.Entries())
-        {
-            if (entry.State == EntityState.Added)
-            {
-                var createdProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "CreatedAt");
-                if (createdProp != null) createdProp.CurrentValue = DateTime.UtcNow;
-            }
-            else if (entry.State == EntityState.Modified)
-            {
-                var updatedProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "UpdatedAt");
-                if (updatedProp != null) updatedProp.CurrentValue = DateTime.UtcNow;
-            }
-        }
-    }
-    ```
-  - `CommitTransactionAsync`: تستدعي `UpdateTimestamps()` و `SaveChangesAsync()` داخلياً قبل تأكيد الـ Transaction، مما يمنع الحاجة لاستدعاء `CompleteAsync` قبلها ويوفر عمليات حفظ مزدوجة في قاعدة البيانات.
+### 2. التعدادات (Enums):
+- **[UserRoleType.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Enums/UserRoleType.cs)**:
+  - `Customer = 0`: متسوق عادي له وصول للمتجر والسلة والطلبات.
+  - `Admin = 1`: مشرف متجر له وصول للكتالوج والمنتجات والأقسام والطلبات.
+  - `SuperAdmin = 2`: المدير العام للنظام، له صلاحية حوكمة المستخدمين وتعيين المشرفين ومراقبة المنصة بالكامل.
+- **[OrderStatus.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Domain/Enums/OrderStatus.cs)**:
+  - `Pending = 0`: في انتظار التأكيد.
+  - `Confirmed = 1`: مؤكد وتم خصم المخزون بنجاح.
+  - `Processing = 2`: قيد التجهيز والتعبئة.
+  - `Shipped = 3`: تم الشحن للعميل.
+  - `Delivered = 4`: تم التسليم بنجاح.
+  - `Cancelled = 5`: ملغي مع إعادة المنتجات للمخزون تلقائياً.
 
 ---
 
-### 4.2 طبقة الـ Application: الخدمات ومنطق الأعمال المحسّن (Application Services)
+## 5. التشريح البرمجي لطبقة الـ Infrastructure (EF Core, Repositories & Security)
 
-كل منطق الأعمال وقواعد الحوكمة تقع في هذه الطبقة حصرياً.
-
-#### 1. خدمة المشرف AdminService.cs
-- `GetDashboardAsync`: تجمع إحصائيات الكتالوج، الأقسام مع تقييماتها، أحدث المنتجات، وأحدث الطلبات في كائن `AdminDashboardDto` دفعة واحدة.
-- `ResolveSearchByIdAsync(int id, string? type)`: خوارزمية ذكية تحدد نوع الـ ID (منتج، قسم، طلب) وتوجه المشرف للمسار الصحيح دون الحاجة لاختيار يدوي.
-- `CreateProductAsync`: تضمن تصفير تقييمات أي منتج جديد برمجياً (`AverageRating = 0.0m; ReviewCount = 0;`).
-
-#### 2. خدمة الإدارة العليا SuperAdminService.cs
-- `PromoteUserRoleAsync`: تمنع المشرف العام الحالي من تعديل أو تنزيل رتبته الذاتية لحماية النظام من الإغلاق العرضي.
-- `ToggleUserStatusAsync`: تمنع المشرف العام من حظر حسابه النشط.
-- `CreateAdminAccountAsync`: تشفر كلمة المرور عبر BCrypt وتنشئ حسابات المشرفين بأمان تام.
-
-#### 3. خدمة المصادقة الموحدة AuthService.cs
-- تم حذف دالة `StaffLoginAsync` القديمة بالكامل ككود ميت، وتوحيد الدخول عبر `LoginAsync`:
-  - تفحص هل المعرف رقمي؟ إذا كان رقماً وكان الحساب مشرفاً (`Admin` أو `SuperAdmin`) تسمح له بالدخول المباشر بالـ ID.
-  - إذا كان بريداً إلكترونياً، يتم التحقق منه ومن الهاش المشفر.
-  - منع العملاء العاديين من الدخول بالأرقام لضمان الانضباط الأمني.
-
-#### 4. خدمة الطلبات والفواتير المحسنة OrderService.cs
-- **إصلاح الأداء الكبير في `CreateOrderFromCartAsync`**:
+### 1. سياق قاعدة البيانات [NexaMartDbContext.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Data/Context/NexaMartDbContext.cs)
+- يحتوي على 8 كائنات `DbSet<T>` لجميع جداول النظام.
+- تطبيق قاعدة الحذف المقيد (`DeleteBehavior.Restrict`) افتراضياً على كافة العلاقات لمنع مسارات الحذف المتتالي غير المقصودة:
   ```csharp
-  // 1. جلب عناصر السلة مع المنتج وتمكين التتبع في استعلام واحد
-  var cartItems = await _unitOfWork.CartItems.Query(disableTracking: false)
-      .Include(c => c.Product)
-      .Where(c => c.UserId == userId)
-      .ToListAsync(cancellationToken);
-
-  // 2. التحقق من المخزون وخصمه مباشرة عبر item.Product بدون أي استعلامات إضافية
-  foreach (var item in cartItems)
+  foreach (var relationship in builder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
   {
-      var product = item.Product;
-      product.StockQuantity -= item.Quantity;
-      _unitOfWork.Products.Update(product);
+      relationship.DeleteBehavior = DeleteBehavior.Restrict;
   }
-
-  // 3. تأكيد ذري واحد مباشر دون استدعاء CompleteAsync المزدوج قبل Commit
-  await _unitOfWork.CommitTransactionAsync(cancellationToken);
   ```
+- تطبيق دقة `decimal(18, 2)` آلياً على كافة الخصائص المالية في النظام لتفادي أي أخطاء تقريب.
+- اكتشاف وتطبيق كافة كلاسات الـ `IEntityTypeConfiguration<T>` المسجلة في مجلد [Configurations](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Data/Configurations/).
 
-#### 5. خدمة الأقسام CategoryService.cs
-- تم نقل حساب متوسط تقييم القسم (`AverageRating`) من الـ Mapping إلى داخل `CategoryService`، بحيث تعود الكيانات محملة بالتقييم المحسوب جاهزة للعرض دون خلط المسؤوليات.
+### 2. المستودع العام [GenericRepository.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Repositories/GenericRepository.cs)
+يوفر واجهة موحدة ونظيفة لكافة استعلامات الـ CRUD:
+- `Query(bool disableTracking = true)`: تتيح بناء استعلامات LINQ عالية المرونة. تعتمد على `AsNoTracking()` افتراضياً لتحقيق أعلى سرعة قراءة وتقليل استهلاك الذاكرة، مع إمكانية تمرير `disableTracking: false` عند الرغبة في تعقب الكيانات لتعديلها في قاعدة البيانات.
+- `GetByIdAsync(int id)`: تستخدم `_dbSet.FindAsync` مع الاستفادة من الذاكرة المحلية للكائن.
+- `Update(T entity)` و `Delete(T entity)`: تفحص حالة الكائن؛ إن كان `Detached` تقوم بعمل `_dbSet.Attach(entity)` قبل تغيير الحالة لمنع استثناءات التعقب.
+
+### 3. وحدة العمل الرشيقة [UnitOfWork.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Repositories/UnitOfWork.cs)
+- تم تنظيف وحدة العمل بالكامل والاعتماد حصرياً على الـ Properties المحددة نوعياً (Strongly-Typed) لجميع الكيانات الثمانية (`Products`, `Categories`, `CartItems`, `WishlistItems`, `Orders`, `OrderItems`, `Reviews`, `Users`).
+- **إدارة المعاملات الذرية (Transactions)**:
+  - `BeginTransactionAsync`: بدء معاملة ذرية تضمن إما إتمام كافة العمليات بنجاح أو التراجع عنها بالكامل.
+  - `CommitTransactionAsync`: تستدعي `UpdateTimestamps()` ثم `SaveChangesAsync()` داخلياً قبل تثبيت المعاملة (`_transaction.CommitAsync()`)، مما يمنع الحاجة لاستدعاء `CompleteAsync` مسبقاً ويوفر استعلامات إضافية.
+  - `RollbackTransactionAsync`: التراجع الفوري عن أي تغييرات عند حدوث أي استثناء أثناء تنفيذ المعاملة.
+- **التحديث الآلي للتوقيتات (`UpdateTimestamps`)**:
+  - تفحص `ChangeTracker.Entries()` قبل الحفظ: تضبط `CreatedAt = DateTime.UtcNow` للكائنات المضافة (إن لم تكن محددة)، وتضبط `UpdatedAt = DateTime.UtcNow` للكائنات المعدلة آلياً.
+
+### 4. التشفير وإدارة الجلسات:
+- **[BcryptPasswordHasher.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Security/BcryptPasswordHasher.cs)**:
+  - يستخدم خوارزمية BCrypt مع معامل أمان متقدم (`WorkFactor = 12`) مما يجعل كسر الهاش بالهجوم الشامل مستحيلاً برمجياً.
+- **[JwtTokenService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Security/JwtTokenService.cs)**:
+  - توليد توكنات JWT مع Claims الرتبة، وتوليد Refresh Tokens عشوائية مشفرة بجلسة تمتد حتى 7 أيام عند اختيار Remember Me.
+
+### 5. التهيئة وبذر البيانات [DbSeeder.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Data/Seed/DbSeeder.cs)
+- تطبيق الـ Migrations آلياً عند بدء تشغيل التطبيق.
+- تنفيذ استعلام SQL لتصفير مراجعات قاعدة البيانات وضبط `AverageRating = 0.0` و `ReviewCount = 0` لكافة المنتجات لتبدأ المنصة بسجل نظيف.
+- بذر الحسابات الافتراضية الثابتة للمشرف العام، مشرف المتجر، وعميل للتجربة.
+- بذر 20 قسماً رئيسياً بتفاصيل وصور واقعية.
+- بذر 500 منتج بواقع 25 منتجاً لكل قسم بأسعار ومخزون واقعي لتمكين تجربة النظام بالكامل فور التشغيل.
 
 ---
 
-### 4.3 كائنات نقل البيانات (Data Transfer Objects - DTOs)
+## 6. التشريح البرمجي لطبقة الـ Application (Services, DTOs & Business Rules)
 
-تفصل بين نماذج البيانات ونماذج العرض:
-- `AdminDashboardDto.cs`: يحمل مقاييس الكتالوج المجمعة وقوائم المنتجات والأقسام والطلبات الأخيرة.
-- `SuperAdminDashboardDto.cs`: يحمل إحصائيات المنصة الإجمالية وتوزيع رتب المستخدمين والإيرادات.
-- `SuperAdminUserListDto.cs`: يحمل قائمة المستخدمين المقسمة لصفحات مع أعداد تابات التصفية (`AllUsersCount`, `CustomersCount`, `AdminsCount`, `BlockedCount`).
+تحتوي هذه الطبقة على 11 خدمة متخصصة، حيث يتم تطبيق مبدأ المسؤولية الواحدة (SRP) وعزل كافة منطق الأعمال:
 
----
-
-### 4.4 نماذج واجهة العرض (Presentation ViewModels)
-
-تقع في مجلد `NexaMart.Web/Models`:
-- `AdminDashboardViewModel`: نماذج البطاقات والجداول الخاصة بلوحة الإدارة.
-- `SuperAdminUserDetailsViewModel`: نموذج تفصيلي يعرض سجل فواتير المستخدم وإجمالي إنفاقه.
-- `ProductFormViewModel` & `CategoryFormViewModel`: نماذج إدخال البيانات المجهزة للتحقق (Validation Attributes).
-
----
-
-### 4.5 وحدات التحكم الرشيقة (Razor-Thin Web Controllers)
-
-تم الالتزام الصارم بنمط **Thin Controller**؛ بحيث يتراوح حجم أي Action بين 1 و 5 أسطر فقط:
-
-#### وحدة تحكم المشرف AdminController.cs:
-```csharp
-[Authorize(Policy = "StaffOnly")]
-public class AdminController : Controller
-{
-    private readonly IAdminService _adminService;
-
-    public AdminController(IAdminService adminService)
-    {
-        _adminService = adminService;
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Dashboard(CancellationToken cancellationToken)
-    {
-        var dashboardDto = await _adminService.GetDashboardAsync(cancellationToken);
-        return View(dashboardDto.ToViewModel());
-    }
-}
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                           Application Services Catalog                            │
+├──────────────────────────┬────────────────────────────┬───────────────────────────┤
+│ Core Store Services      │ Administration Services    │ Platform Infrastructure   │
+├──────────────────────────┼────────────────────────────┼───────────────────────────┤
+│ - ProductService         │ - AdminService             │ - AuthService             │
+│ - CategoryService        │ - SuperAdminService        │ - UserService             │
+│ - CartService            │                            │ - FileStorageService      │
+│ - OrderService           │                            │                           │
+│ - WishlistService        │                            │                           │
+│ - ReviewService          │                            │                           │
+└──────────────────────────┴────────────────────────────┴───────────────────────────┘
 ```
 
-#### وحدة تحكم المشرف العام SuperAdminController.cs:
-```csharp
-[Authorize(Policy = "SuperAdminOnly")]
-public class SuperAdminController : Controller
-{
-    private readonly ISuperAdminService _superAdminService;
+### 1. [AdminService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/AdminService.cs)
+- `GetDashboardAsync`: تجمع إحصائيات الكتالوج، الأقسام مع تقييماتها، أحدث المنتجات، وأحدث الطلبات داخل [AdminDashboardDto](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/DTOs/Admin/AdminDashboardDto.cs).
+- `ResolveSearchByIdAsync(int id, string? type)`: محرك التوجيه الذكي برقم الـ ID؛ يفحص هل المعرف منتج؟ قسم؟ أم طلب؟ ويوجه المشرف فورياً للشاشة المناسبة مع رسالة توضيحية.
+- `CreateProductAsync`: تضمن برمجياً تصفير تقييمات المنتجات الجديدة (`AverageRating = 0.0m; ReviewCount = 0;`).
 
-    public SuperAdminController(ISuperAdminService superAdminService)
-    {
-        _superAdminService = superAdminService;
-    }
+### 2. [SuperAdminService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/SuperAdminService.cs)
+- `GetDashboardAsync`: تجمع مؤشرات الأداء الكلية للمنصة (أعداد المستخدمين حسب الرتب، عدد المحظورين، مبيعات المنصة، والإيراد الإجمالي) داخل [SuperAdminDashboardDto](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/DTOs/SuperAdmin/SuperAdminDashboardDto.cs).
+- `GetUsersPagedAsync`: تعيد قائمة المستخدمين مع أعداد تابات التصفية داخل [SuperAdminUserListDto](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/DTOs/SuperAdmin/SuperAdminUserListDto.cs).
+- `PromoteUserRoleAsync`: تمنع المشرف العام الحالي من تعديل أو تنزيل رتبته الذاتية:
+  ```csharp
+  if (currentUserId == targetUserId)
+      throw new InvalidOperationException("Security Restriction: You cannot modify your own administrative role.");
+  ```
+- `ToggleUserStatusAsync`: تمنع المشرف العام من تعطيل أو حظر حسابه النشط.
+- `CreateAdminAccountAsync`: إنشاء وتشفير حسابات المشرفين الجدد.
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PromoteRole(int userId, UserRoleType newRole, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _superAdminService.PromoteUserRoleAsync(User.GetUserId(), userId, newRole, cancellationToken);
-            TempData["SuccessMessage"] = $"User #{userId} role updated to '{newRole}'.";
-        }
-        catch (Exception ex)
-        {
-            TempData["ErrorMessage"] = ex.Message;
-        }
+### 3. [AuthService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/AuthService.cs)
+- `LoginAsync`: البوابة الموحدة الذكية لتسجيل الدخول:
+  - تفحص هل المعرف رقمي؟ إذا كان رقماً وكان الحساب مشرفاً (`Admin` أو `SuperAdmin`) تسمح له بالدخول المباشر بالـ ID.
+  - تمنع العملاء العاديين من الدخول بالأرقام وتلزمهم بالبريد الإلكتروني.
+  - التحقق من الهاش المشفر وإنشاء التوكنات وتحديث توقيت الدخول.
+- `RegisterAsync`: تسجيل العملاء الجدد مع تطبيق:
+  - فحص البريد الإلكتروني بتعبير نمطي قياسي صارم (Strict RFC Regex).
+  - فحص قوة كلمة المرور (أحرف كبيرة وصغيرة، أرقام، رموز خاصة).
+  - التحقق من القائمة السوداء لكلمات السر الشائعة (Weak Passwords Whitelist).
+  - منع كلمة المرور من احتواء أجزاء من اسم العميل أو بريده.
 
-        return RedirectToAction(nameof(Users));
-    }
-}
-```
+### 4. [OrderService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs)
+- **إنشاء الطلب والخصم الذري للمخزون ([CreateOrderFromCartAsync](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs#L22-L106))**:
+  - جلب عناصر السلة مع المنتج وتمكين التتبع في استعلام واحد (`disableTracking: false`).
+  - التحقق من كفاية المخزون لكل عنصر في السلة.
+  - بدء معاملة ذرية (`BeginTransactionAsync`).
+  - خصم الكميات مباشرة عبر `product.StockQuantity -= item.Quantity` دون أي استعلام إضافي لكل منتج.
+  - إنشاء كائن الـ `Order` وبنوده كلقطة تاريخية وحذف عناصر السلة.
+  - تثبيت وحفظ المعاملة في خطوة واحدة (`CommitTransactionAsync`) وتفريغ السلة.
+- **إلغاء الطلب واسترجاع المخزون ([CancelOrderAsync](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs#L206-L250))**:
+  - يسمح بالإلغاء فقط للطلبات غير المشحونة أو غير المسلمة.
+  - يبدأ معاملة ذرية، يعدل حالة الطلب، ويعيد كميات المنتجات إلى رصيد المخزون تلقائياً.
+
+### 5. [FileStorageService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/FileStorageService.cs)
+- رفع وتخزين الصور بأعلى معايير الأمان الموصى بها في OWASP:
+  - حد أقصى للحجم 5 ميجابايت.
+  - قائمة بيضاء صارمة للامتدادات المسموحة (`.jpg`, `.jpeg`, `.png`, `.webp`).
+  - **فحص التوقيع الثنائي (Magic Bytes)** للتأكد من أن الملف هو صورة حقيقية وليس ملفاً تنفيذياً خبيثاً تم تغيير امتداده.
+  - تطهير أسماء المجلدات لمنع هجمات التراجع في المسارات (Path Traversal Sanitization).
+  - حفظ الملفات بأسماء عشوائية فريدة عبر GUIDs مع حذف الصور القديمة آلياً عند التعديل أو الحذف.
+
+### 6. باقي الخدمات المتخصصة:
+- **[ProductService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/ProductService.cs)**: الفلترة والترقيم والفرز المتعدد، وجلب إحصائيات الكتالوج باستعلام `GroupBy(1)` فردي فائق السرعة.
+- **[CategoryService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/CategoryService.cs)**: إدارة الأقسام، حساب `AverageRating` برمجياً داخل الخدمة، ومنع حذف أي قسم يحوي منتجات.
+- **[CartService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/CartService.cs)**: إدارة سلة التسوق والتحقق من حدود المخزون وحساب المجاميع.
+- **[WishlistService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/WishlistService.cs)**: إدارة المفضلة والتبديل (Toggle) ونقل الأصناف للسلة بنقرة واحدة.
+- **[ReviewService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/ReviewService.cs)**: إضافة وتعديل تقييمات العملاء وحساب المتوسطات وإعادة تحديث المنتج.
+- **[UserService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/UserService.cs)**: إدارة الحسابات، تجميع الإحصائيات باستعلام `GroupBy(1)` واحد، وتعديل الملف الشخصي وكلمات المرور.
 
 ---
 
-### 4.6 طبقة التحويل المقسمة والصريحة (Modular Mapping Architecture)
+## 7. التشريح البرمجي لطبقة الـ Presentation Web (Controllers, Mappings & Views)
 
-تم تقسيم ملف `MappingExtensions.cs` الضخم (513 سطر) إلى **3 ملفات جزئية منظمة** تتبع نفس الكلاس `public static partial class MappingExtensions` داخل مجلد `NexaMart.Web/Mappings/`:
+### 1. إعدادات خط الأنابيب والمصادقة في [Program.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Program.cs)
+- تسجيل خدمات الـ MVC وخدمات الطبقات عبر `AddApplicationServices()` و `AddInfrastructureServices()`.
+- ضبط مصادقة الكوكيز (Cookie Authentication) مع حماية `HttpOnly`, `SameSite = Lax`, و `SlidingExpiration`.
+- تعريف السياسات الأمنية الأربعة (Authorization Policies):
+  - `StaffOnly`: مخصصة لحسابات `Admin` و `SuperAdmin`.
+  - `SuperAdminOnly`: مخصصة لحساب `SuperAdmin` حصرياً.
+  - `AdminOnly`: مخصصة لحساب `Admin`.
+  - `CustomerOnly`: مخصصة لعملاء المتجر.
+- التشغيل التلقائي للمهاجرات وبذر قاعدة البيانات عند إقلاع السيرفر.
 
+### 2. وحدات التحكم الرشيقة (Thin Controllers Architecture)
+تطبق وحدات التحكم نمط الـ Controller فائق الرشاقة؛ حيث يتراوح حجم الـ Action بين 2 إلى 5 أسطر فعلية فقط، مع تفويض كامل منطق العمليات للخدمات:
+- **[AccountController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/AccountController.cs)**: تسجيل الدخول الموحد، تسجيل حسابات العملاء، إدارة الملف الشخصي، وتسجيل الخروج.
+- **[AdminController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/AdminController.cs)**: محمي بسياسة `StaffOnly`. يدير لوحة القيادة، محرك البحث بالـ ID، جداول المنتجات والأقسام، رفع وحفظ الصور، وتحديث حالات الطلبات.
+- **[SuperAdminController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/SuperAdminController.cs)**: محمي بسياسة `SuperAdminOnly`. يدير جدول الحسابات، ترقية الرتب، تفعيل وحظر المستخدمين، وتعيين المشرفين الجدد.
+- **[ProductsController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/ProductsController.cs)**: عرض الكتالوج العام، تفاصيل المنتجات، إضافة وحذف التقييمات، وعمليات الـ CRUD المصرحة للإدارة.
+- **[CategoriesController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/CategoriesController.cs)**: تصفح الأقسام والبحث فيها وإدارتها.
+- **[CartController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/CartController.cs)**: سلة التسوق وإصدار الفاتورة الضريبية المباشرة.
+- **[OrdersController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/OrdersController.cs)**: استعراض سجل الطلبات، طباعة الفاتورة الضريبية المعتمدة، وإلغاء الطلبات.
+- **[WishlistController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/WishlistController.cs)**: إدارة المفضلة وتفريغها ونقل المنتجات للسلة.
+- **[HomeController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/HomeController.cs)**: الصفحة الرئيسية، المنتجات الأكثر مبيعاً، ومركز استقبال الشكاوى وتوليد التذاكر.
+
+### 3. بنية التحويلات المقسمة (Modular Mappings Architecture)
+تم تقسيم الـ Mapping إلى 3 ملفات جزئية منظمة تحت الكلاس `public static partial class MappingExtensions`:
 1. **[StorefrontMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/StorefrontMappings.cs)**:
-   - تحويلات كروت وتفاصيل المنتجات (`ToCardViewModel`, `ToDetailsViewModel`).
-   - تحويلات السلة والمفضلة والطلبات والفواتير والمراجعات للعميل.
+   - تحويلات كروت الكتالوج وصفحات التفاصيل (`ToCardViewModel`, `ToDetailsViewModel`).
+   - تحويلات السلة، المفضلة، تفاصيل الطلبات، الفاتورة الرسمية، والتقييمات.
 2. **[AdminMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/AdminMappings.cs)**:
    - تحويلات جداول المشرف (`ToAdminProductListItemViewModel`, `ToAdminCategoryListItemViewModel`).
-   - تحويل `AdminDashboardDto` إلى `AdminDashboardViewModel`.
-   - تحويل نماذج الإدخال `ToEntity()` مع إزالة التعيين المكرر لـ `CreatedAt` لتترك لوحدة العمل.
-   - قراءة `category.AverageRating` المحسوب مسبقاً في الـ Service بدون تنفيذ أي استعلامات أو عمليات حسابية في الـ Mapping.
+   - تحويل [AdminDashboardDto](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/DTOs/Admin/AdminDashboardDto.cs) إلى [AdminDashboardViewModel](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/AdminViewModels.cs).
+   - تحويل نماذج الإدخال `ToEntity()` مع ترك التواريخ لوحدة العمل.
+   - قراءة `category.AverageRating` المحسوب جاهزاً في الخدمة دون وضع أي استعلامات أو عمليات حسابية في الـ Mapping.
 3. **[SuperAdminMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/SuperAdminMappings.cs)**:
-   - تحويلات إدارة المستخدمين وتفاصيل الحسابات وتعيين المشرفين وإحصائيات المنصة.
+   - تحويلات قائمة المستخدمين، تفاصيل وتاريخ إنفاق الحساب، وإحصائيات لوحة الإدارة العليا.
+
+### 4. نماذج العرض وتأمين المدخلات (ViewModels & Anti-XSS):
+تم تزويد كافة الـ ViewModels بخصائص التحقق الصارمة (Data Annotations):
+- **[ProductFormViewModel.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/ProductViewModels.cs#L53-L98)**:
+  - منع وسوم الـ HTML والـ Scripts عبر تعبير نمطي: `[RegularExpression(@"^[^<>\/\\\{\}\[\]]*$")]`.
+  - حقل ملف الصورة `IFormFile? ImageFile` لدعم الرفع بالسحب والإفلات.
+  - قيود النطاقات للأسعار والمخزون (`[Range]`).
+- **[CategoryFormViewModel.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/CategoryViewModels.cs#L24-L57)**:
+  - حماية مطابقة ضد الـ XSS مع دعم `ImageFile`.
+- **[AccountViewModels.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/AccountViewModels.cs)**:
+  - التحقق من صحة البريد الإلكتروني، تأكيد تطابق كلمات المرور، وقيود طول النصوص.
+- **[ReviewViewModels.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/ReviewViewModels.cs)**:
+  - تقييد التقييم بين 1 و 5 نجوم ومنع وسوم HTML في التعليقات.
 
 ---
 
-## 5. ربط الطبقات ومسار تدفق البيانات الشامل (End-to-End Dataflow & Request Lifecycle)
+## 8. منظومة الأمان والحماية الشاملة (Enterprise Security & Defense-in-Depth)
 
-يوضح المخطط التالي دورة حياة الطلب الكاملة وتكامل الطبقات الأربعة:
+| مجال الحماية | آلية التنفيذ البرمجية | الملفات المسؤولة | النتيجة الأمنية |
+|---|---|---|---|
+| **تشفير كلمات المرور** | BCrypt مع Adaptive Work Factor (Cost 12) | [BcryptPasswordHasher.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Security/BcryptPasswordHasher.cs) | مقاومة تامة لهجمات القوة الغاشمة (Brute-Force) وجداول قوس قزح (Rainbow Tables). |
+| **حماية الـ CSRF** | إجبار الرمز المميز `[ValidateAntiForgeryToken]` على كافة الـ Actions من نوع POST | كافة وحدات التحكم | منع تزوير الطلبات عبر المواقع الخبيثة 100%. |
+| **الحماية ضد الـ XSS** | فحص المدخلات بـ RegularExpression لمنع وسوم `<script>`, `<`, `>` وترميز المخرجات تلقائياً عبر Razor | ViewModels في [NexaMart.Web/Models](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/) | منع حقن الأكواد البرمجية الخبيثة في واجهات الإدارة والمتجر. |
+| **تأمين رفع الملفات** | فحص التوقيع الثنائي (Magic Bytes) + حد 5MB + أسماء GUID عشوائية + مسار آمن | [FileStorageService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/FileStorageService.cs) | منع رفع الشل والملفات التنفيذية الخبيثة وهجمات التراجع في المسارات (Path Traversal). |
+| **سلامة السجلات المالية** | منع الحذف المتتالي `DeleteBehavior.Restrict` + حفظ اللقطة التاريخية في OrderItem | [NexaMartDbContext.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Data/Context/NexaMartDbContext.cs), [OrderItemConfiguration.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Data/Configurations/OrderItemConfiguration.cs) | حماية الفواتير التاريخية من التلاعب أو الحذف غير المقصود. |
+| **حماية الحسابات الإدارية** | منع المشرف العام من حظر حسابه أو تنزيل رتبته ذاتياً في طبقة الخدمة | [SuperAdminService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/SuperAdminService.cs) | ضمان عدم إغلاق النظام أو فقدان حساب الإدارة العليا عن طريق الخطأ. |
+| **التحكم بالصلاحيات** | فحص السياسات عبر Role/Policy-based Authorization | [Program.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Program.cs#L27-L37) | عزل كامل بين صلاحيات العميل والمشرف والمشرف العام. |
+
+---
+
+## 9. مخططات تسلسل تدفق البيانات (End-to-End Sequence Diagrams)
+
+### 1. دورة حياة إصدار الفاتورة الضريبية والخصم الذري للمخزون (Checkout Sequence)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Client as المتصفح (Browser / Admin)
-    participant Routing as Middleware & Security
-    participant Controller as Thin Controller (AdminController)
-    participant Service as Application Service (AdminService)
-    participant UOW as UnitOfWork & Repositories
-    participant DB as SQL Server Database
-    participant Mapper as Modular Mappings (AdminMappings)
-    participant Razor as Razor View Engine
+    actor Customer as العميل (Storefront)
+    participant CartCtrl as CartController
+    participant OrderSvc as OrderService
+    participant UOW as UnitOfWork
+    participant DB as SQL Server
+    participant OrdersCtrl as OrdersController
+    participant View as Razor Invoice View
 
-    Client->>Routing: HTTP GET /Admin/Dashboard
-    Routing->>Routing: التحقق من الصلاحيات ([Authorize(Policy = "StaffOnly")])
-    Routing->>Controller: Dashboard(cancellationToken)
+    Customer->>CartCtrl: HTTP POST /Cart/GenerateInvoice (Anti-CSRF)
+    CartCtrl->>OrderSvc: CreateOrderFromCartAsync(userId)
     
-    Controller->>Service: GetDashboardAsync(cancellationToken)
-    Service->>UOW: Products.Query().AsNoTracking()...
-    UOW->>DB: تنفيذ استعلامات مجمعة عالية الأداء
-    DB-->>UOW: إرجاع السجلات الخام
-    UOW-->>Service: Domain Entities
+    OrderSvc->>UOW: CartItems.Query(disableTracking: false).Include(Product)
+    UOW->>DB: استعلام السلة والمنتجات مع تمكين التتبع
+    DB-->>OrderSvc: إرجاع الأصناف مع كائنات المنتجات
     
-    Note over Service: حساب متوسطات الأقسام وتجميع الإحصائيات في AdminDashboardDto
-    Service-->>Controller: AdminDashboardDto
+    Note over OrderSvc: التحقق من كفاية المخزون لجميع الأصناف
+    OrderSvc->>UOW: BeginTransactionAsync()
     
-    Controller->>Mapper: dto.ToViewModel()
-    Mapper-->>Controller: AdminDashboardViewModel (Mapping فقط بدون Logic)
+    loop لكل صنف في السلة
+        Note over OrderSvc: خصم المخزون: product.StockQuantity -= item.Quantity
+        OrderSvc->>UOW: Products.Update(product)
+        Note over OrderSvc: إنشاء OrderItem بلقطة تاريخية للأسعار
+    end
     
-    Controller->>Razor: View(viewModel)
-    Razor-->>Client: HTTP 200 OK + Rendered HTML Table View
+    OrderSvc->>UOW: Orders.AddAsync(order)
+    OrderSvc->>UOW: CartItems.DeleteRange(cartItems)
+    
+    OrderSvc->>UOW: CommitTransactionAsync()
+    Note over UOW: تحديث CreatedAt/UpdatedAt ثم SaveChanges ثم Commit
+    UOW->>DB: تنفيذ التعديلات والحفظ الذري في المعاملة
+    DB-->>UOW: نجاح المعاملة
+    
+    OrderSvc-->>CartCtrl: إرجاع كائن الطلب المكتمل (Order)
+    CartCtrl-->>Customer: RedirectToAction("Invoice", "Orders", new { id = order.Id })
+    Customer->>OrdersCtrl: HTTP GET /Orders/Invoice/{id}
+    OrdersCtrl->>View: View("Invoice", order.ToDetailsViewModel())
+    View-->>Customer: عرض وطباعة الفاتورة الضريبية الرسمية المعتمدة
 ```
 
 ---
 
-## 6. أهم الدوال والخوارزميات البرمجية والتحسينات (Critical Algorithms & Performance Optimizations)
+### 2. دورة حياة البحث العام برقم الـ ID في لوحة الإدارة (Universal Search Sequence)
 
-### 1. خوارزمية تجميع الإحصائيات باستعلام SQL واحد (Single GroupBy Aggregation)
-الموقع: `UserService.cs` و `ProductService.cs`  
-بدلاً من إرسال 5 استعلامات `COUNT` منفصلة لقاعدة البيانات، يتم تجميع كل الإحصائيات في جولة اتصال واحدة:
-```csharp
-public async Task<(int TotalUsers, int Customers, int Admins, int SuperAdmins, int Blocked)> GetUserStatsAsync(CancellationToken cancellationToken = default)
-{
-    var stats = await _unitOfWork.Users.Query().AsNoTracking()
-        .GroupBy(u => 1)
-        .Select(g => new
-        {
-            Total = g.Count(),
-            Customers = g.Sum(u => u.RoleType == UserRoleType.Customer ? 1 : 0),
-            Admins = g.Sum(u => u.RoleType == UserRoleType.Admin ? 1 : 0),
-            SuperAdmins = g.Sum(u => u.RoleType == UserRoleType.SuperAdmin ? 1 : 0),
-            Blocked = g.Sum(u => !u.IsActive ? 1 : 0)
-        })
-        .FirstOrDefaultAsync(cancellationToken);
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as المشرف (Store Admin)
+    participant AdminCtrl as AdminController
+    participant AdminSvc as AdminService
+    participant ProductSvc as ProductService
+    participant CategorySvc as CategoryService
+    participant OrderSvc as OrderService
 
-    return stats != null
-        ? (stats.Total, stats.Customers, stats.Admins, stats.SuperAdmins, stats.Blocked)
-        : (0, 0, 0, 0, 0);
-}
-```
-
-### 2. خوارزمية تسجيل الدخول المزدوج الموحدة (Unified Login Resolution)
-الموقع: `AuthService.cs`  
-تقبل المعرف كرقم ID للمشرفين أو كبريد إلكتروني للجميع:
-```csharp
-var trimmedIdentifier = identifier.Trim();
-ApplicationUser? user = null;
-
-if (int.TryParse(trimmedIdentifier, out int numericId))
-{
-    user = await _unitOfWork.Users.Query()
-        .FirstOrDefaultAsync(u => u.Id == numericId, cancellationToken);
-
-    if (user != null && user.RoleType == UserRoleType.Customer)
-    {
-        throw new UnauthorizedAccessException("Customer accounts must log in using their email address.");
-    }
-}
-
-if (user == null)
-{
-    var email = trimmedIdentifier.ToLower();
-    user = await _unitOfWork.Users.Query()
-        .FirstOrDefaultAsync(u => u.Email.ToLower() == email, cancellationToken);
-}
-```
-
-### 3. خوارزمية الفاتورة والخصم الذري للمخزون (Optimized Atomic Checkout)
-الموقع: `OrderService.cs`  
-تستخدم المنتجات المحملة مسبقاً مع عناصر السلة وتخصم المخزون وتحفظ الطلب دون أي استعلام مكرر أو حفظ مزدوج:
-```csharp
-await _unitOfWork.BeginTransactionAsync(cancellationToken);
-try
-{
-    foreach (var item in cartItems)
-    {
-        var product = item.Product; // استخدام الكيان المحمل مباشرة
-        if (product.StockQuantity < item.Quantity)
-            throw new InvalidOperationException($"Insufficient stock for {product.Name}");
-
-        product.StockQuantity -= item.Quantity;
-        _unitOfWork.Products.Update(product);
-    }
-
-    await _unitOfWork.Orders.AddAsync(order, cancellationToken);
-    _unitOfWork.CartItems.DeleteRange(cartItems);
-
-    await _unitOfWork.CommitTransactionAsync(cancellationToken); // حفظ وتأكيد ذري في خطوة واحدة
-}
-catch
-{
-    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-    throw;
-}
+    Admin->>AdminCtrl: HTTP GET /Admin/SearchById?id=105
+    AdminCtrl->>AdminSvc: ResolveSearchByIdAsync(105, type=null)
+    
+    AdminSvc->>ProductSvc: ExistsAsync(105)
+    alt تم العثور على منتج برقم 105
+        ProductSvc-->>AdminSvc: true
+        AdminSvc-->>AdminCtrl: Route: ("EditProduct", "Admin", { id = 105 })
+        AdminCtrl-->>Admin: توجيه فوري لشاشة تعديل المنتج #105
+    else لم يتم العثور على منتج
+        AdminSvc->>CategorySvc: ExistsAsync(105)
+        alt تم العثور على قسم برقم 105
+            CategorySvc-->>AdminSvc: true
+            AdminSvc-->>AdminCtrl: Route: ("EditCategory", "Admin", { id = 105 })
+            AdminCtrl-->>Admin: توجيه فوري لشاشة تعديل القسم #105
+        else لم يتم العثور على قسم
+            AdminSvc->>OrderSvc: GetOrderByIdAsync(105)
+            alt تم العثور على طلب برقم 105
+                OrderSvc-->>AdminSvc: Order Entity
+                AdminSvc-->>AdminCtrl: Route: ("Invoice", "Orders", { id = 105 })
+                AdminCtrl-->>Admin: توجيه فوري لشاشة فاتورة الطلب #105
+            else المعرف غير موجود مطلقاً
+                AdminSvc-->>AdminCtrl: Route: ("Dashboard", "Admin", ErrorMessage)
+                AdminCtrl-->>Admin: البقاء في الداشبورد مع تنبيه أحمر يفيد بعدم وجود الكيان
+            end
+        end
+    end
 ```
 
 ---
 
-## 7. سجل كافة المميزات والتحسينات المنفذة (Feature & Optimization Inventory)
+## 10. سجل كافة الميزات والتحسينات المنجزة (Feature & Refactoring Ledger)
 
-| م | الميزة / التحسين الهيكلي | الحالة | الملفات المسؤولة | الوصف الفني الهندسي |
+| م | الميزة / التحسين الهيكلي | الحالة البرمجية | الملفات المسؤولة | الوصف الفني والنتيجة المحققة |
 |---|---|---|---|---|
-| 1 | **تصفير تقييمات المنتجات** | مكتملة 100% | `DbSeeder.cs` | تصفير كافة المراجعات وضبط `AverageRating = 0.0` لجميع المنتجات. |
-| 2 | **تسجيل الدخول الموحد** | مكتملة 100% | `AccountController`, `AuthService` | قبول الـ Email أو الـ ID للموظفين وتوجيه المستخدم تلقائياً حسب رتبته. |
-| 3 | **حذف الكود الميت `StaffLoginAsync`** | مكتملة 100% | `AuthService.cs`, `IAuthService.cs` | إزالة دالة تسجيل دخول الموظفين المنفصلة القديمة بالكامل والاعتماد على المسار الموحد. |
-| 4 | **لوحة تحكم Admin مخصصة** | مكتملة 100% | `AdminController`, `_AdminLayout.cshtml` | واجهة مركز قيادة للمشرف مستقلة وخالية تماماً من أي شريط تنقل عام للمتجر. |
-| 5 | **جداول بيانات المنتجات والأقسام** | مكتملة 100% | `Admin/Dashboard.cshtml`, `Products.cshtml` | عرض الكتالوج بالكامل داخل Data Tables منظمة بدلاً من الكروت لسهولة الإدارة. |
-| 6 | **البحث الفوري برقم الـ ID** | مكتملة 100% | `AdminController`, `AdminService` | شريط بحث ذكي في رأس لوحة الإدارة يكتشف نوع الكيان تلقائياً ويوجه للمسار المناسب. |
-| 7 | **إصلاح استعلامات المنتجات المكررة** | مكتملة 100% | `OrderService.cs` | تفعيل التتبع واستخدام `item.Product` مباشرة في إنشاء الطلب لمنع استعلامات N+1 الزائدة. |
-| 8 | **إزالة SaveChanges المزدوج** | مكتملة 100% | `OrderService.cs` | إزالة استدعاء `CompleteAsync` المسبق لـ `CommitTransactionAsync` لتوفير اتصالين بقاعدة البيانات. |
-| 9 | **دمج استعلامات الإحصائيات (Single Query)** | مكتملة 100% | `UserService.cs`, `ProductService.cs` | دمج 5 استعلامات `COUNT` في استعلام `GroupBy(1)` واحد فائق السرعة. |
-| 10 | **تقسيم الـ Mapping إلى 3 ملفات** | مكتملة 100% | `StorefrontMappings`, `AdminMappings`, `SuperAdminMappings` | تقسيم الملف المونوليثي (513 سطر) إلى ملفات متخصصة لكل مجال عمل. |
-| 11 | **نقل Business Logic من Mapping للخدمة** | مكتملة 100% | `CategoryService.cs`, `AdminMappings.cs` | حساب متوسط تقييم القسم داخل `CategoryService` وتمرير القيمة الجاهزة للـ Mapping. |
-| 12 | **تنظيف وحدة العمل UnitOfWork** | مكتملة 100% | `UnitOfWork.cs`, `IUnitOfWork.cs` | إزالة `ConcurrentDictionary` ودالة `Repository<T>()` والاعتماد على مستودعات Type-safe. |
-| 13 | **إزالة ازدواجية `CreatedAt`** | مكتملة 100% | `AdminMappings.cs`, `SuperAdminMappings.cs` | إزالة `CreatedAt = DateTime.UtcNow` من دوال `ToEntity()` وترك إدارة التواريخ لـ UnitOfWork. |
-| 14 | **لوحة تحكم وحوكمة SuperAdmin** | مكتملة 100% | `SuperAdminController`, `SuperAdminService` | تحكم كامل بالحسابات، ترقية الرتب، وحظر وتفعيل المستخدمين مع حماية المشرف لنفسه. |
-| 15 | **السلة والمفضلة وإصدار الفاتورة** | مكتملة 100% | `CartController`, `WishlistController`, `OrderService` | إدارة كاملة مع زر مباشر لإصدار الفاتورة الضريبية وخصم المخزون ذرّياً دون خطوات دفع وهمية. |
-| 16 | **معمارية Controllers فائقة الرشاقة** | مكتملة 100% | كافة وحدات التحكم والخدمات | حصر أدوار الـ Controllers في 1-5 أسطر لكل Action، وعزل كافة القواعد داخل الـ Services. |
-| 17 | **رفع الصور الآمن بالـ Drag & Drop وفحص الـ Magic Bytes** | مكتملة 100% | `FileStorageService.cs`, `ProductForm.cshtml`, `CategoryForm.cshtml`, `AdminController.cs` | نقل الخدمة لـ `Application/Services`، إزالة حقول روابط الصور النصية بالكامل، فحص التوقيع الثنائي (Magic Bytes)، حفظ الملفات بأسماء عشوائية معزولة وحذف الصور القديمة تلقائياً. |
-| 18 | **تعزيز وتأمين التحقق من المدخلات (Input Validation & Anti-XSS)** | مكتملة 100% | `AccountViewModels.cs`, `ProductViewModels.cs`, `CategoryViewModels.cs`, `ReviewViewModels.cs`, `AuthService.cs` | تطبيق Strict RFC Email Regex، سياسة كلمات مرور صارمة وقائمة سوداء لكلمات السر الشائعة، ومنع حقن وسوم HTML/XSS في أوامر وأوصاف المنتجات والأقسام والتقييمات. |
+| 1 | **تصفير تقييمات المنتجات** | مكتملة 100% | [DbSeeder.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Data/Seed/DbSeeder.cs) | تصفير كافة المراجعات وضبط `AverageRating = 0.0` و `ReviewCount = 0` في قاعدة البيانات. |
+| 2 | **تسجيل الدخول الموحد** | مكتملة 100% | [AccountController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/AccountController.cs), [AuthService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/AuthService.cs) | بوابة ذكية تقبل الـ Email للعملاء والـ ID للمشرفين مع توجيه آلي حسب الرتب. |
+| 3 | **حذف الكود الميت `StaffLoginAsync`** | مكتملة 100% | [AuthService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/AuthService.cs) | حذف الدالة القديمة المنفصلة بالكامل لتجنب ازدواجية مسارات المصادقة. |
+| 4 | **لوحة تحكم Admin مخصصة** | مكتملة 100% | [\_AdminLayout.cshtml](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Views/Shared/_AdminLayout.cshtml) | واجهة مركز قيادة معزولة وخالية تماماً من شريط تنقل المتجر العام. |
+| 5 | **جداول بيانات المنتجات والأقسام** | مكتملة 100% | [Admin/Products.cshtml](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Views/Admin/Products.cshtml), [Categories.cshtml](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Views/Admin/Categories.cshtml) | استبدال الكروت بجداول بيانات إدارية (Data Tables) لتسهيل الرقابة. |
+| 6 | **البحث الفوري برقم الـ ID** | مكتملة 100% | [AdminController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/AdminController.cs), [AdminService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/AdminService.cs) | شريط بحث فوري يكتشف نوع الكيان تلقائياً ويوجه المشرف لمكانه. |
+| 7 | **إصلاح استعلام المنتجات المكرر** | مكتملة 100% | [OrderService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs) | تفعيل التعقب وجلب المنتج مع السلة وتعديل المخزون مباشرة لمنع استعلامات N+1. |
+| 8 | **إزالة SaveChanges المزدوج** | مكتملة 100% | [OrderService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs), [UnitOfWork.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Repositories/UnitOfWork.cs) | إزالة استدعاء `CompleteAsync` قبل `CommitTransactionAsync` لمنع عمليات الحفظ الزائدة. |
+| 9 | **دمج استعلامات الإحصائيات (Single Query)** | مكتملة 100% | [UserService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/UserService.cs), [ProductService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/ProductService.cs) | دمج 5 استعلامات `COUNT` في استعلام `GroupBy(1)` فردي فائق الأداء. |
+| 10 | **تقسيم الـ Mapping إلى 3 ملفات** | مكتملة 100% | [StorefrontMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/StorefrontMappings.cs), [AdminMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/AdminMappings.cs), [SuperAdminMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/SuperAdminMappings.cs) | تقسيم ملف التحويل المونوليثي (513 سطر) إلى ملفات متخصصة لكل مجال عمل. |
+| 11 | **نقل Business Logic من الـ Mapping للخدمة** | مكتملة 100% | [CategoryService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/CategoryService.cs), [AdminMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/AdminMappings.cs) | حساب متوسط تقييم القسم داخل `CategoryService` وتمرير القيمة الجاهزة للـ Mapping. |
+| 12 | **تنظيف وحدة العمل UnitOfWork** | مكتملة 100% | [UnitOfWork.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Repositories/UnitOfWork.cs) | إزالة `ConcurrentDictionary` غير المستخدمة والاعتماد على مستودعات Type-safe. |
+| 13 | **إزالة ازدواجية `CreatedAt`** | مكتملة 100% | [AdminMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/AdminMappings.cs), [SuperAdminMappings.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Mappings/SuperAdminMappings.cs) | إزالة تعيين التواريخ يدوياً في دوال `ToEntity()` وترك المهمة لـ `UnitOfWork`. |
+| 14 | **لوحة تحكم وحوكمة SuperAdmin** | مكتملة 100% | [SuperAdminController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/SuperAdminController.cs), [SuperAdminService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/SuperAdminService.cs) | تحكم كامل بالحسابات، ترقية الرتب، وحظر وتفعيل المستخدمين مع حماية المشرف لنفسه. |
+| 15 | **إصدار الفاتورة الضريبية الفورية** | مكتملة 100% | [CartController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/CartController.cs), [OrdersController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/OrdersController.cs) | إصدار فوري للفاتورة الضريبية المعتمدة مع خصم المخزون ذرّياً دون شاشات دفع صورية. |
+| 16 | **إلغاء الطلب واسترجاع المخزون** | مكتملة 100% | [OrderService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs) | إلغاء آمن للطلبات غير المشحونة مع إعادة زيادة كميات المخزون ذرّياً. |
+| 17 | **رفع الصور الآمن وفحص الـ Magic Bytes** | مكتملة 100% | [FileStorageService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/FileStorageService.cs), [AdminController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/AdminController.cs) | فحص التوقيع الثنائي للصور (JPG, PNG, WebP)، سحب وإفلات، منع التراجع بالمسار، وحذف الصور القديمة. |
+| 18 | **تعزيز التحقق من المدخلات و Anti-XSS** | مكتملة 100% | [ProductViewModels.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/ProductViewModels.cs), [CategoryViewModels.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/CategoryViewModels.cs), [AccountViewModels.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Models/AccountViewModels.cs) | تطبيق تعابير نمطية تمنع وسوم HTML/XSS، وقواعد تحقق صارمة على البريد وكلمات السر. |
+| 19 | **نظام تذاكر الشكاوى والاستفسارات** | مكتملة 100% | [HomeController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/HomeController.cs), [ContactUs.cshtml](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Views/Home/ContactUs.cshtml) | نموذج تواصل ودعم فني يولد تذكرة مرقمة `NX-XXXXXX` مع تحديد أولوية ونوع الاستفسار. |
+| 20 | **بوابة دفع Paymob وتأمين HMAC-SHA512** | مكتملة 100% | [PaymobService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Services/PaymobService.cs), [PaymentController.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Controllers/PaymentController.cs) | تكامل 3-Step Flow كامل (Auth, Order in Cents, PaymentKey, Iframe) مع تشفير HMAC وفصل دورة الدفع. |
+| 21 | **منظومة إيميلات الفواتير والإلغاء (Transactional Emails)** | مكتملة 100% | [EmailService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/EmailService.cs), [OrderService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs) | إرسال فواتير ضريبية فاخرة بـ HTML العربي عند تأكيد الدفع، وإرسال إيميلات إلغاء تفصيلية مع أسباب الإلغاء. |
+| 22 | **إصلاح تعارض معاملات EF Core اليدوية** | مكتملة 100% | [ServiceCollectionExtensions.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Infrastructure/Extensions/ServiceCollectionExtensions.cs) | إزالة `EnableRetryOnFailure` للسماح بـ `UnitOfWork.BeginTransactionAsync` الذري دون تعارض مع الاستراتيجية. |
+| 23 | **إصلاح تضارب تتبع كائنات السلة (ChangeTracker Fix)** | مكتملة 100% | [OrderService.cs](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Application/Services/OrderService.cs) | حذف كائنات السلة المحملة في الذاكرة مباشرة دون إعادة استعلام مكرر، مما أزال خطأ المفتاح المكرر ووفر عملية I/O. |
+| 24 | **نظام الإشعارات الزجاجية العائمة (Modern Toasts)** | مكتملة 100% | [\_ToastNotification.cshtml](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/Views/Shared/_ToastNotification.cshtml), [site.css](file:///d:/Carrer/Our%20Project/Abdo%20Project/NexaMart/NexaMart.Web/wwwroot/css/site.css) | استبدال تنبيهات Bootstrap الصندوقية بـ Toasts عائمة ذات مؤشر زمني 5 ثوانٍ وتصميم Glassmorphism جذاب. |
 
 ---
 
-## 8. دليل المراجع السريع للفحص والاختبار (Reviewer Quick-Start & Testing Guide)
+## 11. دليل المراجع السريع للفحص والتشغيل (Reviewer Quick-Start & Testing Guide)
 
-### 1. بيانات الحسابات المعتمدة الجاهزة للتجربة:
+### 1. بيانات الحسابات المعتمدة الجاهزة للاختبار:
 
-| نوع الرتبة | الـ ID الرقمي للموظف | البريد الإلكتروني (Email) | كلمة المرور (Password) | التوجيه التلقائي بعد الدخول |
+| نوع الرتبة (Role) | الـ ID الرقمي للموظف | البريد الإلكتروني (Email) | كلمة المرور (Password) | شاشة التوجيه التلقائي بعد الدخول |
 |---|---|---|---|---|
 | **Super Administrator** | **`1`** | `superadmin@nexamart.com` | `SuperAdmin@123` | `/SuperAdmin/Dashboard` |
 | **Store Admin** | **`2`** | `admin@nexamart.com` | `Admin@123` | `/Admin/Dashboard` |
 | **Customer (عميل للتجربة)** | **`3`** | `customer@nexamart.com` | `Customer@123` | `/Home/Index` |
 
+> [!NOTE]
+> يمكن للمشرف والمشرف العام تسجيل الدخول إما عبر **الـ ID الرقمي (1 أو 2)** أو عبر **البريد الإلكتروني** من نفس صفحة تسجيل الدخول الموحدة. أما العميل فيسجل دخوله حصراً بالبريد الإلكتروني.
+
 ---
 
-### 2. أوامر البناء والتشغيل والتحقق:
+### 2. أوامر البناء والتشغيل عبر PowerShell:
+
 ```powershell
-# بناء الحل والتأكد من خلوه من أي أخطاء أو تحذيرات:
+# 1. الانتقال لمجلد المشروع والتأكد من البناء النظيف (Zero Errors & Warnings):
 dotnet build "NexaMart.sln"
 
-# تشغيل التطبيق محلياً:
+# 2. تشغيل المشروع محلياً:
 dotnet run --project "NexaMart.Web\NexaMart.Web.csproj"
 ```
-*التطبيق يعمل افتراضياً على المنفذ المحلي: `http://localhost:5086`*
+
+*يعمل التطبيق افتراضياً على الرابط المحلي: `http://localhost:5086` أو `https://localhost:7196`.*
 
 ---
-*تم إعداد وتحديث هذا المستند الشامل ليكون مرجعاً هندسياً دقيقاً يوفر على مراجع الكود كامل الوقت والجهد، ويعكس أعلى درجات الاحترافية في هندسة وتطوير البرمجيات.*
+
+### 3. دليل مسارات وروابط النظام (System Route Sitemap):
+
+| المجال | المسار (Route URL) | الصلاحية المطلوبة | الوصف والوظيفة |
+|---|---|---|---|
+| **المتجر** | `/Home/Index` | عام (متاح للجميع) | الصفحة الرئيسية واستعراض المنتجات الأكثر رواجاً. |
+| **المتجر** | `/Products/Index` | عام (متاح للجميع) | كتالوج المنتجات مع الفلترة والفرز والترقيم. |
+| **المتجر** | `/Products/Details/{id}` | عام (متاح للجميع) | تفاصيل المنتج وتقييمات العملاء وإمكانية إضافة تقييم. |
+| **المتجر** | `/Categories/Index` | عام (متاح للجميع) | استعراض كافة أقسام المتجر الفعالة. |
+| **المتجر** | `/Home/ContactUs` | عام (متاح للجميع) | مركز الدعم الفني وتوليد تذاكر الشكاوى. |
+| **العميل** | `/Cart/Index` | مسجل دخول (`Customer`) | سلة التسوق مع إمكانية التعديل السريع. |
+| **العميل** | `/Cart/Checkout` | مسجل دخول (`Customer`) | شاشة إتمام الطلب واختيار بوابة الدفع وعنوان الشحن. |
+| **العميل** | `/Payment/Callback` | مسجل دخول (`Customer`) | استقبال العميل العائد من Paymob والتحقق من التوقيع الأمني وتأكيد الطلب. |
+| **بوابات الدفع** | `/Payment/Webhook` | عام (سيرفر Paymob) | إشعار السيرفر الخلفي بنتيجة المعاملة المالية وتأكيد الدفع. |
+| **العميل** | `/Orders/Index` | مسجل دخول (`Customer`) | سجل طلبات وفواتير العميل. |
+| **العميل** | `/Orders/Invoice/{id}` | صاحب الطلب أو المشرف | شاشة الفاتورة الضريبية الرسمية المعتمدة القابلة للطباعة. |
+| **العميل** | `/Wishlist/Index` | مسجل دخول (`Customer`) | قائمة الرغبات والمفضلة مع نقل المنتجات للسلة. |
+| **المصادقة** | `/Account/Login` | غير مسجل | بوابة تسجيل الدخول الموحدة (ID أو Email). |
+| **المصادقة** | `/Account/Register` | غير مسجل | تسجيل حساب عميل جديد مع التحقق الأمني الصارم وإرسال OTP. |
+| **المصادقة** | `/Account/VerifyEmail` | غير مسجل | التحقق من البريد الإلكتروني عبر رمز OTP مكون من 6 أرقام. |
+| **المصادقة** | `/Account/ForgotPassword` | غير مسجل | طلب استعادة كلمة المرور عبر البريد الإلكتروني. |
+| **المصادقة** | `/Account/ResetPassword` | غير مسجل | تعيين كلمة مرور جديدة بواسطة رمز الـ OTP. |
+| **المصادقة** | `/Account/Profile` | أي مستخدم مسجل | تعديل البيانات الشخصية وتغيير كلمة المرور. |
+| **المشرف** | `/Admin/Dashboard` | `Admin`, `SuperAdmin` | مركز قيادة المتجر والجداول الإحصائية المجمعة. |
+| **المشرف** | `/Admin/Products` | `Admin`, `SuperAdmin` | جدول بيانات كافة المنتجات وإدارتها وحذفها ورفع الصور. |
+| **المشرف** | `/Admin/Categories` | `Admin`, `SuperAdmin` | جدول بيانات الأقسام وترتيب العرض وحساب متوسط التقييم. |
+| **المشرف** | `/Admin/Orders` | `Admin`, `SuperAdmin` | جدول كافة الطلبات مع تحديث الحالات التشغيلية. |
+| **الإدارة العليا** | `/SuperAdmin/Dashboard` | `SuperAdmin` فقط | لوحة الرقابة التنفيذية والمؤشرات المالية الشاملة للمنصة. |
+| **الإدارة العليا** | `/SuperAdmin/Users` | `SuperAdmin` فقط | جدول حوكمة الحسابات، ترقية الرتب، وحظر وتفعيل المشرفين. |
+| **الإدارة العليا** | `/SuperAdmin/UserDetails/{id}` | `SuperAdmin` فقط | سجل وتاريخ إنفاق أي عميل وقائمة فواتيره التفصيلية. |
+| **الإدارة العليا** | `/SuperAdmin/CreateAdmin` | `SuperAdmin` فقط | شاشة تعيين وتشفير حساب مشرف جديد في النظام. |
+
+---
+
+*تم إعداد وتحديث هذا التوثيق المعماري ليكون المرجع التقني الأحدث والأشمل لمشروع NexaMart Enterprise، موثقاً كافة التحسينات المعمارية والأمنية البرمجية التي تم تطبيقها على مستوى الكود.*

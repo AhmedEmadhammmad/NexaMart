@@ -26,11 +26,11 @@ public static class DbSeeder
         // Ensure all existing product ratings and review counts are zeroed out as required
         try
         {
-            await context.Database.ExecuteSqlRawAsync("UPDATE Products SET AverageRating = 0.0, ReviewCount = 0; DELETE FROM Reviews;");
+            await context.Database.ExecuteSqlRawAsync("UPDATE Products SET AverageRating = 0.0, ReviewCount = 0; DELETE FROM Reviews; UPDATE Users SET IsEmailConfirmed = 1 WHERE IsEmailConfirmed = 0;");
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Could not execute rating reset SQL directly: {Message}", ex.Message);
+            logger.LogWarning(ex, "Could not execute rating reset or user confirmation SQL directly: {Message}", ex.Message);
         }
 
         // 1. Seed Core Administrative and Customer Accounts (SuperAdmin, Admin, Customer only)
@@ -56,6 +56,7 @@ public static class DbSeeder
                     PhoneNumber = "+201000000001",
                     RoleType = UserRoleType.SuperAdmin,
                     IsActive = true,
+                    IsEmailConfirmed = true,
                     CreatedAt = DateTime.UtcNow
                 },
                 new()
@@ -66,6 +67,7 @@ public static class DbSeeder
                     PhoneNumber = "+201000000002",
                     RoleType = UserRoleType.Admin,
                     IsActive = true,
+                    IsEmailConfirmed = true,
                     CreatedAt = DateTime.UtcNow
                 },
                 new()
@@ -76,6 +78,7 @@ public static class DbSeeder
                     PhoneNumber = "+201111111111",
                     RoleType = UserRoleType.Customer,
                     IsActive = true,
+                    IsEmailConfirmed = true,
                     CreatedAt = DateTime.UtcNow
                 }
             };

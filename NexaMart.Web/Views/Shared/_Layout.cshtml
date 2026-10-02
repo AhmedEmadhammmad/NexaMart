@@ -172,25 +172,8 @@
         </nav>
     </header>
 
-    <!-- Global Notifications (Flash Messages) -->
-    <div class="container mt-3">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm d-flex align-items-center gap-2" style="border-radius: var(--radius-md); background: #ecfdf5; color: #065f46;" role="alert">
-                <i class="bi bi-check-circle-fill text-success fs-5"></i>
-                <div class="flex-grow-1">@TempData["SuccessMessage"]</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm d-flex align-items-center gap-2" style="border-radius: var(--radius-md); background: #fef2f2; color: #991b1b;" role="alert">
-                <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
-                <div class="flex-grow-1">@TempData["ErrorMessage"]</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
-    </div>
+    <!-- Modern Floating Toast Notifications -->
+    <partial name="_ToastNotification" />
 
     <!-- Main Content Body -->
     <main role="main" class="flex-grow-1 py-4">

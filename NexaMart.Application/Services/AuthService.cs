@@ -16,15 +16,18 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IEmailService _emailService;
 
     public AuthService(
         IUnitOfWork unitOfWork,
         IPasswordHasher passwordHasher,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
+        _emailService = emailService;
     }
 
     private static readonly HashSet<string> CommonWeakPasswords = new(StringComparer.OrdinalIgnoreCase)
@@ -92,6 +95,12 @@ public class AuthService : IAuthService
         if (!isPasswordValid)
         {
             throw new UnauthorizedAccessException("Invalid credentials.");
+        }
+
+        // 3.1 Check Email Confirmation for Customer accounts
+        if (user.RoleType == UserRoleType.Customer && !user.IsEmailConfirmed)
+        {
+            throw new InvalidOperationException($"EMAIL_NOT_CONFIRMED:{user.Email}");
         }
 
         // 4. Generate JWT access token & Refresh Token
@@ -174,6 +183,231 @@ public class AuthService : IAuthService
         var token = _jwtTokenService.GenerateToken(user, out var expiresAt);
 
         return (token, refreshToken, expiresAt, user);
+    }
+
+    public async Task<(bool Success, string Message, ApplicationUser? User)> RegisterWithOtpAsync(
+        string fullName,
+        string email,
+        string password,
+        string? phoneNumber = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(fullName) || fullName.Trim().Length < 3 || fullName.Trim().Length > 100)
+        {
+            throw new ArgumentException("Full Name must be between 3 and 100 characters.");
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        if (!StrictEmailRegex.IsMatch(normalizedEmail))
+        {
+            throw new ArgumentException("The provided email address format is invalid.");
+        }
+
+        if (!StrongPasswordRegex.IsMatch(password))
+        {
+            throw new ArgumentException("Password must contain at least 8 characters, including 1 uppercase, 1 lowercase, 1 number, and 1 special symbol.");
+        }
+
+        if (CommonWeakPasswords.Contains(password))
+        {
+            throw new ArgumentException("This password is too common and vulnerable to brute-force attacks. Please choose a more complex password.");
+        }
+
+        var emailPrefix = normalizedEmail.Split('@')[0];
+        if (password.ToLowerInvariant().Contains(emailPrefix) || password.ToLowerInvariant().Contains(fullName.Trim().ToLowerInvariant()))
+        {
+            throw new ArgumentException("Password must not contain parts of your name or email address.");
+        }
+
+        // Check for existing account
+        var exists = await _unitOfWork.Users.Query()
+            .AnyAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
+
+        if (exists)
+        {
+            throw new InvalidOperationException("An account with this email address already exists.");
+        }
+
+        var otpCode = Random.Shared.Next(100000, 999999).ToString();
+
+        var user = new ApplicationUser
+        {
+            FullName = fullName.Trim(),
+            Email = normalizedEmail,
+            PasswordHash = _passwordHasher.HashPassword(password),
+            PhoneNumber = phoneNumber?.Trim(),
+            RoleType = UserRoleType.Customer,
+            IsActive = true,
+            IsEmailConfirmed = false,
+            EmailConfirmationOtp = otpCode,
+            EmailConfirmationOtpExpiresAt = DateTime.UtcNow.AddMinutes(15),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = null
+        };
+
+        await _unitOfWork.Users.AddAsync(user, cancellationToken);
+        await _unitOfWork.CompleteAsync(cancellationToken);
+
+        await _emailService.SendEmailConfirmationOtpAsync(user.Email, user.FullName, otpCode, cancellationToken);
+
+        return (true, "Registration successful. Please enter the 6-digit verification code sent to your email.", user);
+    }
+
+    public async Task<(bool Success, string Message, string Token, string RefreshToken, DateTime ExpiresAt, ApplicationUser? User)> VerifyEmailOtpAsync(
+        string email,
+        string otpCode,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otpCode))
+        {
+            return (false, "Email and verification code are required.", string.Empty, string.Empty, DateTime.MinValue, null);
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _unitOfWork.Users.Query(disableTracking: false)
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
+
+        if (user == null)
+        {
+            return (false, "User account not found.", string.Empty, string.Empty, DateTime.MinValue, null);
+        }
+
+        if (user.IsEmailConfirmed)
+        {
+            var existingToken = _jwtTokenService.GenerateToken(user, out var exp);
+            var existingRefresh = _jwtTokenService.GenerateRefreshToken();
+            return (true, "Email is already verified.", existingToken, existingRefresh, exp, user);
+        }
+
+        if (string.IsNullOrWhiteSpace(user.EmailConfirmationOtp) || user.EmailConfirmationOtp != otpCode.Trim())
+        {
+            return (false, "Invalid verification code. Please check and try again.", string.Empty, string.Empty, DateTime.MinValue, null);
+        }
+
+        if (user.EmailConfirmationOtpExpiresAt == null || user.EmailConfirmationOtpExpiresAt < DateTime.UtcNow)
+        {
+            return (false, "The verification code has expired. Please request a new code.", string.Empty, string.Empty, DateTime.MinValue, null);
+        }
+
+        user.IsEmailConfirmed = true;
+        user.EmailConfirmationOtp = null;
+        user.EmailConfirmationOtpExpiresAt = null;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        var token = _jwtTokenService.GenerateToken(user, out var expiresAt);
+        var refreshToken = _jwtTokenService.GenerateRefreshToken();
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.CompleteAsync(cancellationToken);
+
+        return (true, "Email verified successfully.", token, refreshToken, expiresAt, user);
+    }
+
+    public async Task<(bool Success, string Message)> ResendEmailOtpAsync(string email, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return (false, "Email is required.");
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _unitOfWork.Users.Query(disableTracking: false)
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
+
+        if (user == null) return (false, "User account not found.");
+        if (user.IsEmailConfirmed) return (false, "Email is already confirmed.");
+
+        var otpCode = Random.Shared.Next(100000, 999999).ToString();
+        user.EmailConfirmationOtp = otpCode;
+        user.EmailConfirmationOtpExpiresAt = DateTime.UtcNow.AddMinutes(15);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.CompleteAsync(cancellationToken);
+
+        await _emailService.SendEmailConfirmationOtpAsync(user.Email, user.FullName, otpCode, cancellationToken);
+        return (true, "A new 6-digit verification code has been dispatched to your email address.");
+    }
+
+    public async Task<(bool Success, string Message)> ForgotPasswordOtpAsync(string email, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return (false, "Email is required.");
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _unitOfWork.Users.Query(disableTracking: false)
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
+
+        // Always return success message to avoid email harvesting
+        if (user == null || !user.IsActive)
+        {
+            return (true, "If an account exists with this email, a 6-digit recovery code has been dispatched.");
+        }
+
+        var otpCode = Random.Shared.Next(100000, 999999).ToString();
+        user.PasswordResetOtp = otpCode;
+        user.PasswordResetOtpExpiresAt = DateTime.UtcNow.AddMinutes(15);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.CompleteAsync(cancellationToken);
+
+        await _emailService.SendPasswordResetOtpAsync(user.Email, user.FullName, otpCode, cancellationToken);
+        return (true, "If an account exists with this email, a 6-digit recovery code has been dispatched.");
+    }
+
+    public async Task<(bool Success, string Message)> ResetPasswordWithOtpAsync(
+        string email,
+        string otpCode,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otpCode) || string.IsNullOrWhiteSpace(newPassword))
+        {
+            return (false, "All fields are required.");
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _unitOfWork.Users.Query(disableTracking: false)
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
+
+        if (user == null)
+        {
+            return (false, "Invalid request. Please try again.");
+        }
+
+        if (string.IsNullOrWhiteSpace(user.PasswordResetOtp) || user.PasswordResetOtp != otpCode.Trim())
+        {
+            return (false, "Invalid verification code.");
+        }
+
+        if (user.PasswordResetOtpExpiresAt == null || user.PasswordResetOtpExpiresAt < DateTime.UtcNow)
+        {
+            return (false, "The recovery code has expired. Please request a new code.");
+        }
+
+        // Validate password complexity
+        if (!StrongPasswordRegex.IsMatch(newPassword))
+        {
+            return (false, "Password must contain at least 8 characters, including 1 uppercase, 1 lowercase, 1 number, and 1 special symbol.");
+        }
+
+        if (CommonWeakPasswords.Contains(newPassword))
+        {
+            return (false, "This password is too common. Please choose a more complex password.");
+        }
+
+        var emailPrefix = normalizedEmail.Split('@')[0];
+        if (newPassword.ToLowerInvariant().Contains(emailPrefix) || newPassword.ToLowerInvariant().Contains(user.FullName.Trim().ToLowerInvariant()))
+        {
+            return (false, "Password must not contain parts of your name or email address.");
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(newPassword);
+        user.PasswordResetOtp = null;
+        user.PasswordResetOtpExpiresAt = null;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.CompleteAsync(cancellationToken);
+
+        return (true, "Password has been successfully updated. You may now log in with your new password.");
     }
 
     public async Task<(string Token, string RefreshToken, DateTime ExpiresAt, ApplicationUser User)> RefreshTokenAsync(

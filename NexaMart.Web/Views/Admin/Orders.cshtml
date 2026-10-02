@@ -80,14 +80,15 @@
             <table class="table admin-table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th style="width: 80px;">ID</th>
+                        <th style="width: 70px;">ID</th>
                         <th>Order Number</th>
                         <th>Customer</th>
-                        <th>Items Count</th>
-                        <th>Total Amount</th>
+                        <th>Items</th>
+                        <th>Financial Total</th>
+                        <th>Payment</th>
                         <th>Order Date</th>
-                        <th>Status</th>
-                        <th class="text-end" style="width: 220px;">Fulfillment & Invoice</th>
+                        <th>Fulfillment</th>
+                        <th class="text-end" style="width: 160px;">Invoice & Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -110,7 +111,28 @@
                                     <span class="badge bg-light text-secondary border">@order.ItemsCount Items</span>
                                 </td>
                                 <td>
-                                    <span class="fw-bold text-success fs-6">@order.TotalAmount.ToString("C")</span>
+                                    <div class="fw-bold text-success fs-6">@order.TotalAmount.ToString("N2") @order.Currency</div>
+                                    <small class="text-muted d-block" style="font-size: 11px;">
+                                        Sub: @order.SubTotal.ToString("N2") | Ship: @order.ShippingCost.ToString("N2")
+                                    </small>
+                                </td>
+                                <td>
+                                    <div>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                            <i class="bi bi-credit-card me-1"></i> @order.PaymentMethod
+                                        </span>
+                                    </div>
+                                    <div class="mt-1">
+                                        <span class="badge @(order.PaymentStatus == NexaMart.Domain.Enums.PaymentStatus.Paid ? "bg-success" : order.PaymentStatus == NexaMart.Domain.Enums.PaymentStatus.Failed ? "bg-danger" : "bg-warning text-dark")">
+                                            @order.PaymentStatus
+                                        </span>
+                                        @if (!string.IsNullOrWhiteSpace(order.TransactionId))
+                                        {
+                                            <span class="badge bg-light text-muted border font-monospace ms-1" title="Paymob Transaction Reference">
+                                                ref: @order.TransactionId
+                                            </span>
+                                        }
+                                    </div>
                                 </td>
                                 <td>
                                     <small class="text-muted">@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</small>

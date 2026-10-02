@@ -119,3 +119,55 @@ public class ProfileViewModel
     [Display(Name = "Confirm New Password")]
     public string? ConfirmNewPassword { get; set; }
 }
+
+public class VerifyEmailViewModel
+{
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Please enter the 6-digit verification code.")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "Verification code must be exactly 6 digits.")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Verification code must consist of 6 digits.")]
+    [Display(Name = "6-Digit Verification Code")]
+    public string OtpCode { get; set; } = string.Empty;
+
+    public string? ReturnUrl { get; set; }
+}
+
+public class ForgotPasswordViewModel
+{
+    [Required(ErrorMessage = "Email address is required.")]
+    [MaxLength(150, ErrorMessage = "Email cannot exceed 150 characters.")]
+    [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = "Please enter a valid email address.")]
+    [Display(Name = "Email Address")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public class ResetPasswordViewModel
+{
+    [Required(ErrorMessage = "Email address is required.")]
+    [EmailAddress]
+    [Display(Name = "Email Address")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Please enter the 6-digit recovery code.")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "Recovery code must be exactly 6 digits.")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Recovery code must consist of 6 digits.")]
+    [Display(Name = "6-Digit Recovery Code")]
+    public string OtpCode { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "New password is required.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-])[A-Za-z\d@$!%*?&#._-]{8,}$", 
+        ErrorMessage = "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character (@$!%*?&#._-).")]
+    [DataType(DataType.Password)]
+    [Display(Name = "New Password")]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Confirm password is required.")]
+    [DataType(DataType.Password)]
+    [Compare(nameof(NewPassword), ErrorMessage = "Passwords do not match.")]
+    [Display(Name = "Confirm New Password")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}

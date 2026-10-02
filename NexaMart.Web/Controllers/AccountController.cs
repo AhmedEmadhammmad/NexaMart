@@ -92,6 +92,12 @@ public class AccountController : Controller
             ModelState.AddModelError(string.Empty, ex.Message);
             return View(model);
         }
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("EMAIL_NOT_CONFIRMED:"))
+        {
+            var unconfirmedEmail = ex.Message.Replace("EMAIL_NOT_CONFIRMED:", string.Empty);
+            TempData["WarningMessage"] = "Please enter the 6-digit verification code sent to your email to activate your account.";
+            return RedirectToAction(nameof(VerifyEmail), new { email = unconfirmedEmail, returnUrl = model.ReturnUrl });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error during login for {Identifier}", model.Identifier);
@@ -118,7 +124,7 @@ public class AccountController : Controller
     }
 
     // =========================================================================
-    // 3. REGISTRATION (Customer Only)
+    // 3. REGISTRATION (Customer with 6-Digit OTP Email Verification)
     // =========================================================================
 
     [HttpGet]
@@ -144,23 +150,28 @@ public class AccountController : Controller
 
         try
         {
-            var (_, _, _, user) = await _authService.RegisterAsync(
+            var (success, message, user) = await _authService.RegisterWithOtpAsync(
                 model.FullName,
                 model.Email,
                 model.Password,
                 model.PhoneNumber,
                 HttpContext.RequestAborted);
 
-            await SignInUserAsync(user, rememberMe: false);
-
-            _logger.LogInformation("New customer account registered: {Email} (ID: {Id})", user.Email, user.Id);
-
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            if (!success || user == null)
             {
-                return Redirect(returnUrl);
+                ModelState.AddModelError(string.Empty, message);
+                return View(model);
             }
 
-            return RedirectToAction("Index", "Home");
+            _logger.LogInformation("New customer registered (pending verification): {Email} (ID: {Id})", user.Email, user.Id);
+            TempData["SuccessMessage"] = "Account created! A 6-digit verification code has been dispatched to your email.";
+
+            return RedirectToAction(nameof(VerifyEmail), new { email = model.Email, returnUrl });
+        }
+        catch (ArgumentException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return View(model);
         }
         catch (InvalidOperationException ex)
         {
@@ -173,6 +184,135 @@ public class AccountController : Controller
             ModelState.AddModelError(string.Empty, "Registration failed. Please try again.");
             return View(model);
         }
+    }
+
+    // =========================================================================
+    // 3.1 EMAIL OTP VERIFICATION
+    // =========================================================================
+
+    [HttpGet]
+    public IActionResult VerifyEmail(string? email = null, string? returnUrl = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        return View(new VerifyEmailViewModel { Email = email ?? string.Empty, ReturnUrl = returnUrl });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyEmail(VerifyEmailViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var (success, message, token, refreshToken, expiresAt, user) = await _authService.VerifyEmailOtpAsync(
+            model.Email,
+            model.OtpCode,
+            HttpContext.RequestAborted);
+
+        if (!success || user == null)
+        {
+            ModelState.AddModelError(nameof(model.OtpCode), message);
+            return View(model);
+        }
+
+        await SignInUserAsync(user, rememberMe: false);
+        TempData["SuccessMessage"] = "Your email has been verified successfully! Welcome to NexaMart.";
+
+        if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+        {
+            return Redirect(model.ReturnUrl);
+        }
+
+        return RedirectToAction("Index", "Home");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResendEmailOtp(string email)
+    {
+        var (success, message) = await _authService.ResendEmailOtpAsync(email, HttpContext.RequestAborted);
+        if (success)
+        {
+            TempData["SuccessMessage"] = message;
+        }
+        else
+        {
+            TempData["ErrorMessage"] = message;
+        }
+
+        return RedirectToAction(nameof(VerifyEmail), new { email });
+    }
+
+    // =========================================================================
+    // 3.2 FORGOT & RESET PASSWORD (6-Digit OTP)
+    // =========================================================================
+
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        return View(new ForgotPasswordViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var (success, message) = await _authService.ForgotPasswordOtpAsync(model.Email, HttpContext.RequestAborted);
+        TempData["SuccessMessage"] = message;
+
+        return RedirectToAction(nameof(ResetPassword), new { email = model.Email });
+    }
+
+    [HttpGet]
+    public IActionResult ResetPassword(string? email = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        return View(new ResetPasswordViewModel { Email = email ?? string.Empty });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var (success, message) = await _authService.ResetPasswordWithOtpAsync(
+            model.Email,
+            model.OtpCode,
+            model.NewPassword,
+            HttpContext.RequestAborted);
+
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, message);
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Your password has been reset successfully! You can now log in.";
+        return RedirectToAction(nameof(Login));
     }
 
     // =========================================================================

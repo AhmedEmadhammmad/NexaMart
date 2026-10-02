@@ -1,0 +1,224 @@
+@model NexaMart.Web.Models.CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout & Payment";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Cart" asp-action="Index" class="text-decoration-none">Shopping Cart</a></li>
+            <li class="breadcrumb-item active">Secure Checkout</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-0">Secure Checkout</h2>
+            <p class="text-muted small mb-0">Complete your shipping and payment information to place your order.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Return to Cart
+        </a>
+    </div>
+
+
+    <form asp-action="Checkout" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 rounded-3 small"></div>
+
+        <input type="hidden" asp-for="SubTotal" />
+        <input type="hidden" asp-for="ShippingCost" />
+        <input type="hidden" asp-for="TaxAmount" />
+        <input type="hidden" asp-for="DiscountAmount" />
+        <input type="hidden" asp-for="Currency" />
+
+        <div class="row g-4">
+            <!-- Left: Shipping & Payment Details -->
+            <div class="col-lg-7">
+                <!-- Delivery & Contact Section -->
+                <div class="glass-card p-4 mb-4 bg-white border rounded-3 shadow-sm">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-geo-alt-fill text-primary"></i> 1. Shipping &amp; Contact Details
+                    </h5>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="CustomerName" class="form-label-custom small fw-bold">Full Name</label>
+                            <input asp-for="CustomerName" class="form-control form-control-custom" placeholder="Recipient's full name" />
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="CustomerPhone" class="form-label-custom small fw-bold">Contact Phone Number</label>
+                            <input asp-for="CustomerPhone" class="form-control form-control-custom" placeholder="+20 100 000 0000" />
+                            <span asp-validation-for="CustomerPhone" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="CustomerEmail" class="form-label-custom small fw-bold">Email for Invoice &amp; Tracking</label>
+                            <input asp-for="CustomerEmail" class="form-control form-control-custom" placeholder="name@domain.com" />
+                            <span asp-validation-for="CustomerEmail" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="ShippingAddress" class="form-label-custom small fw-bold">Street Address, Building &amp; Apartment</label>
+                            <input asp-for="ShippingAddress" class="form-control form-control-custom" placeholder="e.g. 15 El-Tahrir Street, Floor 3, Apt 12" />
+                            <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label asp-for="City" class="form-label-custom small fw-bold">City / Town</label>
+                            <input asp-for="City" class="form-control form-control-custom" placeholder="Cairo" />
+                            <span asp-validation-for="City" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label asp-for="State" class="form-label-custom small fw-bold">Governorate / State</label>
+                            <input asp-for="State" class="form-control form-control-custom" placeholder="Cairo" />
+                            <span asp-validation-for="State" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label asp-for="PostalCode" class="form-label-custom small fw-bold">Postal Code (Optional)</label>
+                            <input asp-for="PostalCode" class="form-control form-control-custom" placeholder="11511" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="OrderNotes" class="form-label-custom small fw-bold">Delivery Instructions / Notes (Optional)</label>
+                            <textarea asp-for="OrderNotes" rows="2" class="form-control form-control-custom" placeholder="Any special delivery instructions..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method Section (Paymob Ready) -->
+                <div class="glass-card p-4 bg-white border rounded-3 shadow-sm">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-credit-card-2-front-fill text-success"></i> 2. Select Payment Method
+                    </h5>
+                    <p class="text-muted small mb-3">All transactions are processed through encrypted 3D-Secure protocols.</p>
+
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Option 1: Cash On Delivery -->
+                        <div class="form-check p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between" style="cursor: pointer;">
+                            <div class="d-flex align-items-center gap-3">
+                                <input class="form-check-input ms-0 me-2" type="radio" asp-for="PaymentMethod" value="@((int)NexaMart.Domain.Enums.PaymentMethod.CashOnDelivery)" id="payCod" checked />
+                                <div>
+                                    <label class="form-check-label fw-bold text-dark mb-0 d-block" for="payCod">
+                                        Cash on Delivery (COD)
+                                    </label>
+                                    <small class="text-muted">Pay in cash when courier delivers the package to your address.</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-secondary px-3 py-2"><i class="bi bi-cash-stack"></i> Cash</span>
+                        </div>
+
+                        <!-- Option 2: Paymob Credit / Debit Card -->
+                        <div class="form-check p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between" style="cursor: pointer;">
+                            <div class="d-flex align-items-center gap-3">
+                                <input class="form-check-input ms-0 me-2" type="radio" asp-for="PaymentMethod" value="@((int)NexaMart.Domain.Enums.PaymentMethod.PaymobCard)" id="payCard" />
+                                <div>
+                                    <label class="form-check-label fw-bold text-dark mb-0 d-block" for="payCard">
+                                        Online Card (Paymob Gateway)
+                                    </label>
+                                    <small class="text-muted">Pay securely with Visa, MasterCard, or Meeza debit/credit cards.</small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <span class="badge bg-primary px-2 py-2"><i class="bi bi-credit-card"></i> Visa / MC</span>
+                            </div>
+                        </div>
+
+                        <!-- Option 3: Paymob Mobile Wallets -->
+                        <div class="form-check p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between" style="cursor: pointer;">
+                            <div class="d-flex align-items-center gap-3">
+                                <input class="form-check-input ms-0 me-2" type="radio" asp-for="PaymentMethod" value="@((int)NexaMart.Domain.Enums.PaymentMethod.PaymobWallet)" id="payWallet" />
+                                <div>
+                                    <label class="form-check-label fw-bold text-dark mb-0 d-block" for="payWallet">
+                                        Mobile Wallets &amp; InstaPay (Paymob)
+                                    </label>
+                                    <small class="text-muted">Vodafone Cash, Orange Money, Etisalat Cash, WE Pay, and Smart Wallets.</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-info text-white px-2 py-2"><i class="bi bi-phone"></i> Mobile Wallet</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Order Summary Card -->
+            <div class="col-lg-5">
+                <div class="glass-card p-4 bg-white border rounded-3 shadow-sm sticky-top" style="top: 90px;">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom">Order Summary</h5>
+
+                    <!-- Cart Item Previews -->
+                    <div class="mb-3" style="max-height: 240px; overflow-y: auto;">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            <div class="d-flex align-items-center justify-content-between py-2 border-bottom small">
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (!string.IsNullOrEmpty(item.ProductImageUrl))
+                                    {
+                                        <img src="@item.ProductImageUrl" alt="@item.ProductName" class="rounded-2" style="width: 38px; height: 38px; object-fit: cover; border: 1px solid #e2e8f0;" />
+                                    }
+                                    <div>
+                                        <span class="fw-semibold text-dark text-truncate d-block" style="max-width: 180px;">@item.ProductName</span>
+                                        <span class="text-muted">Qty: @item.Quantity × @item.UnitPrice.ToString("N2")</span>
+                                    </div>
+                                </div>
+                                <span class="fw-bold text-dark">@item.TotalPrice.ToString("N2") @Model.Currency</span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Pricing Calculation -->
+                    <div class="d-flex flex-column gap-2 mb-3 pb-3 border-bottom text-muted small">
+                        <div class="d-flex justify-content-between">
+                            <span>Subtotal:</span>
+                            <span class="fw-bold text-dark">@Model.SubTotal.ToString("N2") @Model.Currency</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Shipping &amp; Delivery:</span>
+                            @if (Model.ShippingCost == 0)
+                            {
+                                <span class="fw-bold text-success">FREE</span>
+                            }
+                            else
+                            {
+                                <span class="fw-bold text-dark">@Model.ShippingCost.ToString("N2") @Model.Currency</span>
+                            }
+                        </div>
+                        @if (Model.TaxAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between">
+                                <span>Sales Tax (VAT):</span>
+                                <span class="fw-bold text-dark">@Model.TaxAmount.ToString("N2") @Model.Currency</span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Final Total Payable -->
+                    <div class="d-flex justify-content-between align-items-baseline mb-4">
+                        <span class="fs-5 fw-bold text-dark">Total Due:</span>
+                        <span class="display-6 fw-bold text-primary" style="font-size: 1.8rem;">
+                            @Model.TotalAmount.ToString("N2") @Model.Currency
+                        </span>
+                    </div>
+
+                    <button type="submit" class="btn btn-gradient btn-lg w-100 py-3 mb-3 fw-bold">
+                        <i class="bi bi-shield-lock-fill me-2"></i> Confirm Order &amp; Generate Invoice
+                    </button>
+
+                    <div class="text-center text-muted small border-top pt-3">
+                        <i class="bi bi-envelope-check text-success me-1"></i> An official tax invoice will be sent to your email.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

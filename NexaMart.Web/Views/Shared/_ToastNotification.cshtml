@@ -1,0 +1,90 @@
+@using System.Text.Encodings.Web
+
+<!-- Modern Glassmorphism Floating Toast Container -->
+<div id="nexaToastContainer" class="nexa-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+    (function () {
+        window.showToast = function (message, type = 'success', title = null) {
+            if (!message) return;
+
+            const container = document.getElementById('nexaToastContainer');
+            if (!container) return;
+
+            const icons = {
+                success: 'bi-check2-circle',
+                error: 'bi-exclamation-octagon-fill',
+                warning: 'bi-exclamation-triangle-fill',
+                info: 'bi-info-circle-fill'
+            };
+
+            const titles = {
+                success: 'Success',
+                error: 'Notice / Error',
+                warning: 'Attention',
+                info: 'Information'
+            };
+
+            const selectedIcon = icons[type] || icons.info;
+            const selectedTitle = title || titles[type] || 'Notice';
+
+            const toast = document.createElement('div');
+            toast.className = `nexa-toast nexa-toast-${type}`;
+            toast.innerHTML = `
+                <div class="nexa-toast-body">
+                    <div class="nexa-toast-icon">
+                        <i class="bi ${selectedIcon}"></i>
+                    </div>
+                    <div class="nexa-toast-content">
+                        <div class="nexa-toast-title">${selectedTitle}</div>
+                        <div class="nexa-toast-message">${message}</div>
+                    </div>
+                    <button type="button" class="nexa-toast-close" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="nexa-toast-progress"></div>
+            `;
+
+            container.appendChild(toast);
+
+            const removeToast = () => {
+                if (toast.classList.contains('hiding')) return;
+                toast.classList.add('hiding');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            };
+
+            const closeBtn = toast.querySelector('.nexa-toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', removeToast);
+            }
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(removeToast, 5000);
+        };
+
+        // Automatic dispatch from Server Flash Messages (TempData)
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>window.showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["SuccessMessage"]!.ToString()!))', 'success', 'Success');</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>window.showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["ErrorMessage"]!.ToString()!))', 'error', 'Error');</text>
+            }
+            @if (TempData["WarningMessage"] != null)
+            {
+                <text>window.showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["WarningMessage"]!.ToString()!))', 'warning', 'Attention');</text>
+            }
+            @if (TempData["InfoMessage"] != null)
+            {
+                <text>window.showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["InfoMessage"]!.ToString()!))', 'info', 'Information');</text>
+            }
+        });
+    })();
+</script>

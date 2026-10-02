@@ -21,6 +21,15 @@ public class ApplicationUser
     public bool IsActive { get; set; } = true;
     public DateTime? LastLoginAt { get; set; }
 
+    // Email Confirmation & Verification (6-digit OTP)
+    public bool IsEmailConfirmed { get; set; } = false;
+    public string? EmailConfirmationOtp { get; set; }
+    public DateTime? EmailConfirmationOtpExpiresAt { get; set; }
+
+    // Password Reset (6-digit OTP)
+    public string? PasswordResetOtp { get; set; }
+    public DateTime? PasswordResetOtpExpiresAt { get; set; }
+
     // JWT Refresh Token fields
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiresAt { get; set; }
